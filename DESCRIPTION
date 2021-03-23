@@ -13,7 +13,9 @@ Imports:
     IRanges,
     Rcpp,
     rtracklayer,
-    data.table
-Remotes: PhanstielLab/straw/R
+    data.table,
+    reshape2,
+    grid
+Remotes: PhanstielLab/straw/R, PhanstielLab/BentoBox
 biocViews: GenomicRanges, IRanges, rtracklayer
 LinkingTo: Rcpp

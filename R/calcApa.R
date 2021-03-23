@@ -11,6 +11,9 @@
 #'
 #' @return Returns a list APA matricies that can be compiled and plotted.
 #'
+#' @import data.table strawr
+#' @importFrom tidyr complete full_seq
+#'
 #' @export
 #'
 calcApa <- function(bedpe, hicFile, norm = "NONE", res = 10000, buffer = 5, equalLengthOut = T) {
@@ -66,7 +69,7 @@ calcApa <- function(bedpe, hicFile, norm = "NONE", res = 10000, buffer = 5, equa
     as.data.table(straw(norm = norm, fname = hicFile,
                         chr1loc = paste0(bedpe2[i,1:3], collapse = ":"),
                         chr2loc = paste0(bedpe2[i,4:6], collapse = ":"),
-                        unit = "BP", binsize = res))
+                        unit = "BP", binsize = res, matrix = "observed"))
   })
 
   if (!equalLengthOut) {

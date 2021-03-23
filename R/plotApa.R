@@ -17,6 +17,9 @@
 #'
 #' @return Function will draw a APA matrix and return an object of class "bb_apa"
 #'
+#' @import grid BentoBox
+#' @importFrom reshape2 acast
+#'
 #' @examples
 #'
 #' ## Create divergent matrix ####
@@ -75,6 +78,9 @@ plotApa <- function(params = NULL, apa,
     defaultArgs = formals(eval(match.call()[[1]])),
     declaredArgs = lapply(match.call()[-1], eval)
   )
+
+  ## Evaluate parsed arguments
+  parsedArgs <- lapply(parsedArgs, eval)
 
   ## Initialize object
   apa_plot <- structure(
@@ -146,7 +152,7 @@ plotApa <- function(params = NULL, apa,
 
   ## Map values to colors
   colv <- bb_maptocolors(vec = as.vector(apa_plot$apa),
-                         col = apa_plot$palette,
+                         col = apa_plot$color_palette,
                          num = 1000, range = apa_plot$zrange)
 
   ## Format color vector back to apa matrix
@@ -178,6 +184,9 @@ plotApa <- function(params = NULL, apa,
 
   } else {
 
+    ## Check that BentoBox page exists
+    check_bbpage("Use bb_pageCreate() to make a BentoBox page to place a plot.")
+
     ## Convert coordinates into same units as page
     page_coords <- convert_page(object = apa_plot)
 
@@ -192,18 +201,19 @@ plotApa <- function(params = NULL, apa,
   ## Handle graphical objects ------------------------------------------------------------
 
   ## Initialize gTree for grobs
-  assign("apa_grobs", gTree(vp = vp), envir = bbEnv)
+  assign("apa_grobs", gTree(vp = vp), envir = BentoBox:::bbEnv)
 
   ## Make grobs
   apaRaster <- rasterGrob(image = m, interpolate = F)
 
   ## Assign grobs to gTree
   assign(x = "apa_grobs",
-         value = addGrob(gTree = get("apa_grobs", envir = bbEnv), child = apaRaster),
-         envir = bbEnv)
+         value = addGrob(gTree = get("apa_grobs", envir = BentoBox:::bbEnv),
+                         child = apaRaster),
+         envir = BentoBox:::bbEnv)
 
   ## Add grobs to object
-  apa_plot$grobs <- get("apa_grobs", envir = bbEnv)
+  apa_plot$grobs <- get("apa_grobs", envir = BentoBox:::bbEnv)
 
   ## Plot grobs
   if (apa_plot$draw) {

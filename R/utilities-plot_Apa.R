@@ -6,7 +6,7 @@
 check_apa_list <- function(apa) {
 
   ## Check that the class of each element is a matrix
-  if (!identical(unique(unlist(lapply(apa, class))), "matrix")) {
+  if (!unique(unlist(lapply(apa, function(x) "matrix" %in% class(x))))) {
     stop("apa list must all be class 'matrix'.", call. = FALSE)
   }
 
@@ -134,7 +134,210 @@ set_zrange <- function(apa_plot){
 
 }
 
+## From BentoBox
+## Define a function that converts coordinates/dimensions into default units
+defaultUnits <- function(object, default.units){
 
+  if (!(is.null(object$x) & is.null(object$y))){
+
+    if (!"unit" %in% class(object$x)){
+
+      if (!is.numeric(object$x)){
+
+        stop("x-coordinate is neither a unit object nor a numeric value. Cannot place object.", call. = FALSE)
+
+      }
+
+      if (is.null(default.units)){
+
+        stop("x-coordinate detected as numeric.\'default.units\' must be specified.", call. = FALSE)
+
+      }
+
+      object$x <- unit(object$x, default.units)
+
+    }
+
+
+    if (!"unit" %in% class(object$y)){
+
+      ## Check for "below" y-coord
+      if (grepl("b", object$y) == TRUE){
+        if (grepl("^[ac-zA-Z]+$", object$y) == TRUE){
+          stop("\'below\' y-coordinate detected with additional letters. Cannot parse y-coordinate.", call. = FALSE)
+        }
+
+        if(is.na(as.numeric(gsub("b","", object$y)))){
+          stop("\'below\' y-coordinate does not have a numeric associated with it. Cannot parse y-coordinate.", call. = FALSE)
+        }
+
+        object$y <- plot_belowY(y_coord = object$y)
+
+      } else {
+
+        if (!is.numeric(object$y)){
+
+          stop("y-coordinate is neither a unit object nor a numeric value. Cannot place object.", call. = FALSE)
+
+        }
+
+        if (is.null(default.units)){
+
+          stop("y-coordinate detected as numeric.\'default.units\' must be specified.", call. = FALSE)
+
+        }
+
+        object$y <- unit(object$y, default.units)
+
+      }
+
+
+    }
+
+    if (!"unit" %in% class(object$width)){
+
+      if (!is.numeric(object$width)){
+
+        stop("Width is neither a unit object nor a numeric value. Cannot place object.", call. = FALSE)
+
+      }
+
+      if (is.null(default.units)){
+
+        stop("Width detected as numeric.\'default.units\' must be specified.", call. = FALSE)
+
+      }
+
+      object$width <- unit(object$width, default.units)
+
+    }
+
+    if (!"unit" %in% class(object$height)){
+
+      if (!is.numeric(object$height)){
+
+        stop("Height is neither a unit object nor a numeric value. Cannot place object.", call. = FALSE)
+
+      }
+
+      if (is.null(default.units)){
+
+        stop("Height detected as numeric.\'default.units\' must be specified.", call. = FALSE)
+
+      }
+
+      object$height <- unit(object$height, default.units)
+
+    }
+
+  }
+
+  return(object)
+
+}
+
+## From BentoBox
+## Define a function that maps a vector to colors
+bb_maptocolors <- function(vec, col, num = 100, range = NULL){
+
+  if (is.null(range) == TRUE){
+    breaks <- seq(min(vec), max(vec), length.out = num)
+  } else {
+    vec[which(vec < range[1])] = range[1]
+    vec[which(vec > range[2])] = range[2]
+    breaks <- seq(range[1], range[2], length.out = num)
+  }
+
+  cols <- col(length(breaks) + 1)
+  colvec <- as.character(cut(vec, c(-Inf, breaks, Inf), labels = cols))
+  return(colvec)
+
+
+}
+
+## From BentoBox
+## Define a function to grab the name of a viewport
+viewport_name <- function(viewport){
+
+  return(viewport$name)
+
+}
+
+## From BentoBox
+## Define a function to get a list of current viewports
+current_viewports <- function(){
+
+  if (!"bb_page" %in% names(lapply(current.vpTree()$children, viewport_name))){
+
+    current <- as.list(names(lapply(current.vpTree()$children, viewport_name)))
+
+  } else {
+
+    ## Check for groups
+    page_children <- names(lapply(current.vpTree()$children$bb_page$children, viewport_name))
+
+    if (length(grep(pattern = "bb_group", x = page_children)) > 0){
+
+      group_vps <- as.list(page_children[grep(pattern = "bb_group", x = page_children)])
+
+      group_children <- unlist(lapply(group_vps, vp_children), recursive = F)
+
+      children_vps <- lapply(group_children, viewport_name)
+
+      current <- c(page_children, children_vps)
+
+    } else {
+
+      current <- as.list(page_children)
+
+    }
+
+  }
+
+  return(current)
+}
+
+## From BentoBox
+## Define a function to make sure a bb_page viewport exists
+check_bbpage <- function(error){
+
+  if (!"bb_page" %in% current.vpPath()){
+
+    stop(error, call. = FALSE)
+
+  }
+
+}
+
+## From BentoBox
+## Define a function to convert to page units
+convert_page <- function(object){
+
+
+
+  ## Get page_height and its units from bbEnv through bb_makepage
+  page_height <- get("page_height", envir = BentoBox:::bbEnv)
+  page_units <- get("page_units", envir = BentoBox:::bbEnv)
+
+  ## Convert x and y coordinates and height and width to same page_units
+  old_x <- object$x
+  old_y <- object$y
+  old_height <- object$height
+  old_width <- object$width
+  new_x <- convertX(old_x, unitTo = page_units)
+  new_y <- convertY(unit(page_height, units = page_units) - convertY(old_y, unitTo = page_units), unitTo = page_units)
+  new_height <- convertHeight(old_height, unitTo = page_units)
+  new_width <- convertWidth(old_width, unitTo = page_units)
+
+  object$x <- new_x
+  object$y <- new_y
+  object$height <- new_height
+  object$width <- new_width
+
+
+  return(object)
+
+}
 
 ## Parameter parsing function (until updated) --------------------------------------------
 

@@ -8,6 +8,8 @@
 #'
 #' @return Returns a data.table of BEDPE interactions
 #'
+#' @import data.table
+#'
 #' @export
 #'
 calcBedpe <- function(bed, res = 10000, x = 100, decreasing = TRUE,
@@ -15,7 +17,7 @@ calcBedpe <- function(bed, res = 10000, x = 100, decreasing = TRUE,
 
   ## Format bed if it is a granges object
   if ("GRanges" %in% class(bed)) {
-    bed <- data.table::as.data.table(bed)
+    bed <- as.data.table(bed)
     bed[, width:=NULL]
   }
 
