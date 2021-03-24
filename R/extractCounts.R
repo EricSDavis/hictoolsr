@@ -13,7 +13,6 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'), res = 10000) {
   ## Write helper function to bin bedpe interactions by resolution
   ##    Make it flexible enough to handle data.tables/frames and GInteraction objects
   ## Apply helper functino in extract Counts
-  ## Move this function to JuicePouch repository
 
   ## Start progress bar
   pb <- progress::progress_bar$new(

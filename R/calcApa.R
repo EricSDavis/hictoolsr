@@ -11,8 +11,6 @@
 #'
 #' @return Returns a list APA matricies that can be compiled and plotted.
 #'
-#' @import data.table strawr
-#' @importFrom tidyr complete full_seq
 #'
 #' @export
 #'

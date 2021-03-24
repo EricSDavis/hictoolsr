@@ -22,8 +22,6 @@ plotApa(
 \arguments{
 \item{params}{optional "bb_params" object containing relevant function parameters}
 
-\item{apa}{matrix, list of matricies, or 3 column data.frame of APA results}
-
 \item{x}{numeric or unit object specifying x-location of plot}
 
 \item{y}{numeric or unit object specifying y-location of plot}
@@ -45,6 +43,8 @@ height are only given as numeric vectors}
 \item{n}{numeric by which to divide aggregate matrix}
 
 \item{zrange}{vector of length 2; max and min values to set color scale}
+
+\item{data}{matrix, list of matricies, or 3 column data.frame of APA results}
 }
 \value{
 Function will draw a APA matrix and return an object of class "bb_apa"

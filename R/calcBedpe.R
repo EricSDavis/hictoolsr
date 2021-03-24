@@ -8,8 +8,6 @@
 #'
 #' @return Returns a data.table of BEDPE interactions
 #'
-#' @import data.table
-#'
 #' @export
 #'
 calcBedpe <- function(bed, res = 10000, x = 100, decreasing = TRUE,

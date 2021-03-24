@@ -1,7 +1,7 @@
 #' Plots Aggregate Peak Analysis Matrix
 #'
 #' @param params optional "bb_params" object containing relevant function parameters
-#' @param apa matrix, list of matricies, or 3 column data.frame of APA results
+#' @param data matrix, list of matricies, or 3 column data.frame of APA results
 #' @param x numeric or unit object specifying x-location of plot
 #' @param y numeric or unit object specifying y-location of plot
 #' @param width numeric or unit object specifying width of plot
@@ -17,8 +17,6 @@
 #'
 #' @return Function will draw a APA matrix and return an object of class "bb_apa"
 #'
-#' @import grid BentoBox
-#' @importFrom reshape2 acast
 #'
 #' @examples
 #'
