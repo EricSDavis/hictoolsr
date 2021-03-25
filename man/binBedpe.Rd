@@ -13,6 +13,9 @@ binBedpe(bedpe, res, a1Pos, a2Pos)
 
 \item{a1Pos, a2Pos}{Position within anchors to resize the bin. Can be a character or integer vector of length 1 or length(bedpe) designating the position for each element in bedpe. Character options are "start", "end" and "center". Integers are referenced from the start position for '+' and '*' strands and from the end position for the '-' strand.}
 }
+\value{
+GInteractions objected binned to res by a1Pos and a2Pos.
+}
 \description{
 Define function to flexibly bin bedpe data by hic resolution
 }

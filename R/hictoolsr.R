@@ -11,7 +11,7 @@
 #' @importFrom tidyr complete full_seq
 #' @importFrom reshape2 acast
 #' @importFrom magrittr %<>%
-#' @importFrom GenomicRanges shift resize trim
-#' @importFrom S4Vectors mcols first second
+#' @importFrom GenomicRanges shift resize trim makeGRangesFromDataFrame
+#' @importFrom S4Vectors mcols first second DataFrame
 #'
 "_PACKAGE"

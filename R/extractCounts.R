@@ -20,6 +20,20 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'), res = 10000) {
     clear = F, total = length(hic)*length(chroms)*3+1)
   pb$tick(0)
 
+  ## Check that each anchor is binned correctly
+  binned <- check_binned(bedpe, res)
+
+  ## Bin if not correctly binned and give warning
+  if (!binned) {
+    warning(strwrap("bedpe is not binned correctly.
+        Binning each anchor at center position.
+        For more options use the binBedpe() function."),
+            immediate. = TRUE,
+            call. = FALSE)
+
+    bedpe <- binBedpe(bedpe, res, a1Pos = 'center', a2Pos = 'center')
+  }
+
   ## Convert chroms to character
   chroms <- as.character(chroms)
 
