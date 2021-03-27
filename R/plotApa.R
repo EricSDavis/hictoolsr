@@ -101,16 +101,7 @@ plotApa <- function(params = NULL, apa,
   ## Read in data & check for formatting errors ------------------------------------------
 
   ## Accept multiple types of input and convert to matrix
-  if (class(apa_plot$apa) == "list") {
-
-    ## Check for errors with list format
-    check_apa_list(apa_plot$apa)
-
-    ## Convert apa matrix list to a single apa matrix
-    apa_plot$apa <- Reduce("+", apa_plot$apa)
-
-
-  } else if ("data.frame" %in% class(apa_plot$apa)) {
+  if ("data.frame" %in% class(apa_plot$apa)) {
 
     ## Check for errors with data.frame format
     check_apa_dataFrame(apa_plot$apa)
@@ -124,7 +115,7 @@ plotApa <- function(params = NULL, apa,
     ## More specific error message if apa is null
     stop("argument 'apa' is missing, with no default.")
 
-  } else if (class(apa_plot$apa) != "matrix") {
+  } else if (!"matrix" %in% class(apa_plot$apa)) {
 
     ## Stop for anything that is not a matrix
     stop(sprintf("class %s is not supported.", class(apa_plot$apa)))

@@ -2,26 +2,6 @@
 
 ## Error checking functions --------------------------------------------------------------
 
-## Define function that checks apa for list format
-check_apa_list <- function(apa) {
-
-  ## Check that the class of each element is a matrix
-  if (!unique(unlist(lapply(apa, function(x) "matrix" %in% class(x))))) {
-    stop("apa list must all be class 'matrix'.", call. = FALSE)
-  }
-
-  ## Check that all elements are of the same, square dimensions
-  if (length(unique(unlist(lapply(apa, dim)))) != 1) {
-    stop("apa list must contain matricies of the same dimensions and nrow == ncol.", call. = FALSE)
-  }
-
-  ## Check that all elements are numeric
-  if (!any(c("numeric", "integer", "double") %in% class(unlist(apa)))) {
-    stop("apa list must be a list of numeric matricies.", call. = FALSE)
-  }
-
-}
-
 ## Define function that checks apa for data.frame format
 check_apa_dataFrame <- function(apa) {
 
