@@ -61,7 +61,7 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'), res = 10000) {
       )
 
       ## Swap row assignment for out of order x and y
-      ep[y < x, `:=`(y,x)]
+      ep[y < x, `:=`(x=y,y=x)]
 
       ## Pull out the entire chromosome sparse matrix
       sparseMat <- as.data.table(strawr::straw(norm = "NONE", fname = hic[i],
