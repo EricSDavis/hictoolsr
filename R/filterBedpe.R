@@ -16,7 +16,7 @@ filterBedpe <- function(bedpe, res, buffer) {
   ## Input checking and processing -------------------------------------------------------
 
   ## Convert to GInteractions object
-  if ("GInteractions" != class(bedpe)) {
+  if (!"GInteractions" %in% class(bedpe)) {
     warning('class(bedpe) != "GInteractions". Using as_ginteractions() to convert.')
     bedpe <- as_ginteractions(bedpe)
   }
