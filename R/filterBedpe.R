@@ -13,20 +13,48 @@
 #'
 filterBedpe <- function(bedpe, res, buffer) {
 
-  ## TODO Generalize this function for inter & intra pairs
+  ## Input checking and processing -------------------------------------------------------
 
-  ## Only valid for intrachromosomal bedpe files
-  if(all(bedpe[[1]] != bedpe[[4]])) {
-    stop("bb_filterBedpe is only valid for intrachromosomal pairs")
+  ## Convert to GInteractions object
+  if ("GInteractions" != class(bedpe)) {
+    warning('class(bedpe) != "GInteractions". Using as_ginteractions() to convert.')
+    bedpe <- as_ginteractions(bedpe)
   }
 
-  ## Distance from diagonal to center bedpe pixel
-  d <- (sqrt((abs(bedpe[[5]] - bedpe[[2]])^2 * 2)) / 2)
+  ## Check that each anchor is binned correctly
+  binned <- check_binned(bedpe, res)
+
+  ## Bin if not correctly binned and give warning
+  if (!binned) {
+    warning(strwrap("bedpe is not binned correctly.
+        It is a good idea to bin bedpe before filtering.
+        Binning each anchor at center position.
+        For more options use the binBedpe() function."),
+            immediate. = TRUE,
+            call. = FALSE)
+
+    bedpe <- binBedpe(bedpe, res, a1Pos = 'center', a2Pos = 'center')
+  }
+
+  ## Convert to data.table in bedpe format
+  bedpe <-
+    as.data.table(bedpe)[,c(1:3, 6:8)] %>%
+    `colnames<-`(c("chr1", "start1", "end1", "chr2", "start2", "end2"))
+
+
+  ## Calculate and filter by distances ---------------------------------------------------
 
   ## Distance from center bedpe pixel to corner of apa
   y <- sqrt((res*(buffer*2 + 1))^2 * 2) / 2
 
-  ## Return loops that don't intersect the diagonal
-  return(bedpe[d > y])
+  ## For interchromosomal reads:
+  ## Distance from diagonal to center bedpe pixel
+  bedpe[chr1 == chr2, d := (sqrt((abs(start2 - start1)^2 * 2)) / 2)]
+
+  ## Return interactions that don't intersect the diagonal
+  bedpe <- bedpe[is.na(d) | d > y, -c('d')]
+
+  ## Return GInteractions object
+  return(as_ginteractions(bedpe))
 
 }

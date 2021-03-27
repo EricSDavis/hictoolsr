@@ -1,106 +1,199 @@
 #' Extract BEDPE interactions from a Hi-C matrix
 #'
 #' @param bedpe data.frame or data.table in BEDPE format.
-#' @param hicFile string path to .hic file.
+#' @param hic string path to .hic file.
 #' @param norm string hic normalization <NONE/VC/VC_SQRT/KR>.
 #' @param res integer resolution of bedpe bins.
 #' @param buffer integer number of res-length bins from the center pixel.
-#' @param equalLengthOut logical can be set to false to get an APA list that is not the
-#'   same length as the number of rows of the input bedpe file. Adds a slight efficieny
-#'   boost.
+#' @param filter TRUE or FALSE (default). If TRUE, \code{filterBedpe()} will be used to remove short intrachromosomal interactions that would otherwise cross the diagonal.
 #'
 #' @return Returns a list APA matricies that can be compiled and plotted.
 #'
 #'
 #' @export
 #'
-calcApa <- function(bedpe, hicFile, norm = "NONE", res = 10000, buffer = 5, equalLengthOut = T) {
+calcApa <- function(bedpe, hic, norm = 'NONE', res = 10000, buffer = 5, filter = FALSE) {
 
-  ## Put data in correct order for straw extraction
-  if (all(bedpe[[1]] == bedpe[[4]])) {
+  ## Set scipen to 999 for straw extraction
+  oo <- options()
+  options(scipen = 999)
+  on.exit(options(oo))
 
-    ## Intrachromosomal: Flip columns where x1 > y1 if chr are equal
-    ## Convert chromosome factors to characters
-    bedpe[[1]] <- as.character(bedpe[[1]])
-    bedpe[[4]] <- as.character(bedpe[[4]])
+  ## Input checking and processing -------------------------------------------------------
 
-    ## Flip columns where x1 > y1 if chr are equal
-    bedpe[bedpe$y1 - bedpe$x1 < 0,] <- bedpe[bedpe$y1 - bedpe$x1 < 0, c(4:6, 1:3)]
+  ## Convert to GInteractions object
+  if ("GInteractions" != class(bedpe)) {
+    warning('class(bedpe) != "GInteractions". Using as_ginteractions() to convert.')
+    bedpe <- as_ginteractions(bedpe)
+  }
 
-  } else {
+  ## Check that each anchor is binned correctly
+  binned <- check_binned(bedpe, res)
 
-    ## Interchromosomal: Flip columns where chr1 > chr2
-    ## Replace chromosome X, Y with 23, 24
-    bedpe[[1]][bedpe[[1]] == "X"] <- 23
-    bedpe[[4]][bedpe[[4]] == "X"] <- 23
-    bedpe[[1]][bedpe[[1]] == "Y"] <- 23
-    bedpe[[4]][bedpe[[4]] == "Y"] <- 23
+  ## Bin if not correctly binned and give warning
+  if (!binned) {
+    warning(strwrap("bedpe is not binned correctly.
+        Binning each anchor at center position.
+        For more options use the binBedpe() function."),
+            immediate. = TRUE,
+            call. = FALSE)
 
-    ## Coerce chromosome strings to numeric
-    bedpe[[1]] <- as.numeric(bedpe[[1]])
-    bedpe[[4]] <- as.numeric(bedpe[[4]])
+    bedpe <- binBedpe(bedpe, res, a1Pos = 'center', a2Pos = 'center')
+  }
 
-    ## Flip anchor order where chr1 > chr2
-    bedpe[bedpe[[1]] > bedpe[[4]],] <- bedpe[bedpe[[1]] > bedpe[[4]], c(4:6, 1:3)]
+  ## Filter bedpe
+  if (filter) {
+    bedpe <- filterBedpe(bedpe, res, buffer)
+  }
 
-    ## Coerce chromosome numerics to strings
-    bedpe[[1]] <- as.numeric(bedpe[[1]])
-    bedpe[[4]] <- as.numeric(bedpe[[4]])
+  ## Convert to data.table in reduced format
+  bedpe <-
+    as.data.table(bedpe)[,c(1:2,6:7)] %>%
+    `colnames<-`(c("chr1", "start1", "chr2", "start2"))
 
-    ## Replace 23, 24 with chromosome X, Y
-    bedpe[[1]][bedpe[[1]] == "23"] <- "X"
-    bedpe[[4]][bedpe[[4]] == "23"] <- "X"
-    bedpe[[1]][bedpe[[1]] == "24"] <- "Y"
-    bedpe[[4]][bedpe[[4]] == "24"] <- "Y"
+  ## Remove 'chr' for straw (also converts to character vector)
+  bedpe$chr1 <- gsub('chr', '', bedpe$chr1)
+  bedpe$chr2 <- gsub('chr', '', bedpe$chr2)
+
+  ## Put data in correct order for straw extraction --------------------------------------
+
+  ## Intrachromosomal: Flip column order where start1 > start2
+  bedpe[chr1 == chr2 & start1 > start2, `:=`(start1=start2, start2=start1)]
+
+
+  ## Interchromosomal: Flip column order where chr1 > chr2
+
+  ## Replace X, Y with 23, 24
+  bedpe[chr1 == 'X', chr1 := 23]
+  bedpe[chr1 == 'Y', chr1 := 24]
+  bedpe[chr2 == 'X', chr2 := 23]
+  bedpe[chr2 == 'Y', chr2 := 24]
+
+  ## Coerce chromsome strings to numeric
+  bedpe[,chr1 := as.numeric(chr1)]
+  bedpe[,chr2 := as.numeric(chr2)]
+
+  ## Flip column order where chr1 > chr2
+  bedpe[chr1 > chr2, `:=`(chr1=chr2, start1=start2, chr2=chr1, start2=start1)]
+
+  ## Set order
+  setorderv(bedpe, c('chr1', 'chr2', 'start1', 'start2'))
+
+  ## Coerce chromosome numeric to strings
+  bedpe[,chr1 := as.character(chr1)]
+  bedpe[,chr2 := as.character(chr2)]
+
+  ## Replace 23, 24 with X, Y
+  bedpe[chr1 == '23', chr1 := 'X']
+  bedpe[chr1 == '24', chr1 := 'Y']
+  bedpe[chr2 == '23', chr2 := 'X']
+  bedpe[chr2 == '24', chr2 := 'Y']
+
+  ## Prepare groups and locs for extraction ----------------------------------------------
+
+  ## Get min and max ranges to extract for each chr pair
+  regs <- bedpe[, .(min = min(start1, start2) - res*buffer,
+                    max = max(start1, start2) + res*buffer),
+                by = .(chr1, chr2)]
+
+  ## Paste ranges to get chr1 and chr2 locs
+  locs <- regs[, .(chr1loc = paste(chr1, min, max, sep = ':'),
+                   chr2loc = paste(chr2, min, max, sep = ':'))]
+
+  ## Get group information from chr combinations
+  bedpe[, GRP := .GRP, by = .(chr1, chr2)]
+
+
+  ## Extract slices from hic file --------------------------------------------------------
+
+  ## Start progress bar
+  pb <- progress::progress_bar$new(
+    format = "  :step [:bar] :percent elapsed: :elapsedfull",
+    clear = F, total = nrow(locs)*3+1)
+  pb$tick(0)
+
+  ## Initialize list for storing lists of wide matricies
+  m <- list()
+
+  ## Begin extraction and searching for counts
+  for (i in 1:nrow(locs)) {
+
+    ## Update progress
+    pb$tick(tokens=list(step=sprintf('Extracting chr%s-chr%s',
+                                     regs$chr1[i], regs$chr2[i])))
+
+    ## Extract sparse matrix from group
+    sparseMat <- as.data.table(strawr::straw(norm = norm,
+                                             fname = hic,
+                                             chr1loc = locs$chr1loc[i],
+                                             chr2loc = locs$chr2loc[i],
+                                             unit = "BP",
+                                             binsize = res,
+                                             matrix = "observed"))
+
+    ## Update progress
+    pb$tick(tokens=list(step=sprintf('Matching chr%s-chr%s',
+                                     regs$chr1[i], regs$chr2[i])))
+
+    ## Subset interactions by group
+    g <- bedpe[GRP == i,]
+
+    ## Generate bins for rows and columns
+    bins <- g[,.(x = seq(from = start1 - res*buffer, to = start1 + res*buffer, by = res),
+                 y = seq(from = start2 - res*buffer, to = start2 + res*buffer, by = res),
+                 counts = 0), by = .(groupRow = 1:nrow(g))]
+
+    ## Expand bins to long format (fast cross-join)
+    longMat <- bins[, do.call(CJ, c(.SD, sorted = F)),
+                    .SDcols = c('x', 'y'), by = groupRow]
+    longMat$counts <- 0
+
+    ## Rename columns and rearrange
+    longMat <- longMat[,.(x, y, counts, groupRow)]
+
+    ## Set keys
+    setkeyv(sparseMat, c('x', 'y'))
+
+    ## Get counts by key
+    longMat$counts <- sparseMat[longMat]$counts
+
+    ## Set unmatched counts (NA) to 0
+    longMat[is.na(counts), counts := 0]
+
+    ## Update progress
+    pb$tick(tokens=list(step=sprintf('Aggregating chr%s-chr%s',
+                                     regs$chr1[i], regs$chr2[i])))
+
+    ## Generate centered bins
+    cbins <- seq(from = 0 - res*buffer, to = 0 + res*buffer, by = res)
+
+    ## Expand centered bins (fast cross-join)
+    expBins <- CJ(Var1=cbins, Var2=cbins)
+
+    ## Replace x and y with the expanded, centered bins
+    longMat[,`:=`(x = expBins$Var1,
+                  y = expBins$Var2,
+                  counts = counts), by = groupRow]
+
+    ## Aggregate matrix by x and y position
+    agg <- longMat[, .(counts = sum(counts)), by = .(x, y)]
+
+    ## Cast to wide as a list of a single matrix
+    wideMat <- list(reshape2::acast(agg, x ~ y, value.var = 'counts'))
+
+    ## Append matrix list
+    m <- append(m, wideMat)
 
   }
 
-  ## Expand expand pixel to range
-  bedpe2    <- bedpe
-  bedpe2$x1 <- bedpe$x1 - (res*buffer)
-  bedpe2$x2 <- bedpe$x1 + (res*buffer)
-  bedpe2$y1 <- bedpe$y1 - (res*buffer)
-  bedpe2$y2 <- bedpe$y1 + (res*buffer)
+  ## Aggregate chr-chr matricies
+  aggM <- Reduce('+', m)
 
-  ## Find all counts within slice of data
-  counts <- lapply(1:nrow(bedpe2), function(i) {
-    as.data.table(straw(norm = norm, fname = hicFile,
-                        chr1loc = paste0(bedpe2[i,1:3], collapse = ":"),
-                        chr2loc = paste0(bedpe2[i,4:6], collapse = ":"),
-                        unit = "BP", binsize = res, matrix = "observed"))
-  })
+  ## Close progress bar
+  pb$tick(tokens = list(step = "Done!"))
+  if(pb$finished) pb$terminate()
 
-  if (!equalLengthOut) {
-    ## Filter out empty counts
-    bedpe2 <- bedpe2[lapply(counts, nrow) > 0]
-    counts <- counts[lapply(counts, nrow) > 0]
-  }
+  ## Return aggregated matrix
+  return(aggM)
 
-  ## Create vectorized version of seq function
-  seq2 <- Vectorize(seq.default, vectorize.args = c("from", "to"), SIMPLIFY = F)
-
-  ## Get rows and columns for matrix
-  rows <- seq2(from = bedpe2$y1, to = bedpe2$y2, by = res)
-  cols <- seq2(from = bedpe2$x1, to = bedpe2$x2, by = res)
-
-  ## Fill missing combinations
-  ct <- lapply(1:length(counts), function(i) {
-    as.data.table(complete(counts[[i]],
-                           x = full_seq(cols[[i]], res),
-                           y = full_seq(rows[[i]], res),
-                           fill = list(counts = 0)))
-  })
-
-  ## Cast to wide format
-  dc <- lapply(ct, function(i) {
-    dcast.data.table(i, y ~ x, value.var = "counts", fill = 0, drop = F)
-  })
-
-  ## Convert to matrix
-  dm <- lapply(dc, function(i) {
-    as.matrix(i[,-1], rownames = i$y)
-  })
-
-  ## Return list of apa matricies
-  return(dm)
 }

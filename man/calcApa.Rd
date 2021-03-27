@@ -4,19 +4,12 @@
 \alias{calcApa}
 \title{Extract BEDPE interactions from a Hi-C matrix}
 \usage{
-calcApa(
-  bedpe,
-  hicFile,
-  norm = "NONE",
-  res = 10000,
-  buffer = 5,
-  equalLengthOut = T
-)
+calcApa(bedpe, hic, norm = "NONE", res = 10000, buffer = 5, filter = FALSE)
 }
 \arguments{
 \item{bedpe}{data.frame or data.table in BEDPE format.}
 
-\item{hicFile}{string path to .hic file.}
+\item{hic}{string path to .hic file.}
 
 \item{norm}{string hic normalization <NONE/VC/VC_SQRT/KR>.}
 
@@ -24,9 +17,7 @@ calcApa(
 
 \item{buffer}{integer number of res-length bins from the center pixel.}
 
-\item{equalLengthOut}{logical can be set to false to get an APA list that is not the
-same length as the number of rows of the input bedpe file. Adds a slight efficieny
-boost.}
+\item{filter}{TRUE or FALSE (default). If TRUE, \code{filterBedpe()} will be used to remove short intrachromosomal interactions that would otherwise cross the diagonal.}
 }
 \value{
 Returns a list APA matricies that can be compiled and plotted.
