@@ -46,6 +46,7 @@ Improve function naming:
   * Specifically, remove `starts - res*buffer` and `end + res*buffer` in filtering.
   * Will require `GRanges` to have `seqinfo`
 * Move binning warning to its own function
+* Currently removes mcols after filtering - make sure to add those back in.
 
 
 `mergeBedpe()`
