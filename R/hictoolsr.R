@@ -12,6 +12,6 @@
 #' @importFrom reshape2 acast
 #' @importFrom magrittr %<>%
 #' @importFrom GenomicRanges shift resize trim makeGRangesFromDataFrame
-#' @importFrom S4Vectors mcols first second DataFrame
+#' @importFrom S4Vectors mcols `mcols<-` first second DataFrame
 #'
 "_PACKAGE"
