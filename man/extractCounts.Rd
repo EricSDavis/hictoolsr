@@ -4,7 +4,13 @@
 \alias{extractCounts}
 \title{Extract counts from .hic file(s)}
 \usage{
-extractCounts(bedpe, hic, chroms = c(1:22, "X", "Y"), res = 10000)
+extractCounts(
+  bedpe,
+  hic,
+  chroms = c(1:22, "X", "Y"),
+  res = 10000,
+  norm = "NONE"
+)
 }
 \arguments{
 \item{bedpe}{GInteraction object that has been binned to the correct resolution}
@@ -14,6 +20,8 @@ extractCounts(bedpe, hic, chroms = c(1:22, "X", "Y"), res = 10000)
 \item{chroms}{Character vector of chromosomes to extract}
 
 \item{res}{Resolution of bedpe bins}
+
+\item{norm}{string hic normalization <NONE/VC/VC_SQRT/KR>.}
 }
 \description{
 Extract counts from .hic file(s)

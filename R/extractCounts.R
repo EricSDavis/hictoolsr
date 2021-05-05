@@ -2,12 +2,14 @@
 #'
 #' @param bedpe GInteraction object that has been binned to the correct resolution
 #' @param hic Path to .hic file
-#' @param res Resolution of bedpe bins
 #' @param chroms Character vector of chromosomes to extract
+#' @param res Resolution of bedpe bins
+#' @param norm string hic normalization <NONE/VC/VC_SQRT/KR>.
 #'
 #' @export
 #'
-extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'), res = 10000) {
+extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'),
+                          res = 10000, norm = 'NONE') {
 
   ## TODO
   ## Write helper function to bin bedpe interactions by resolution
@@ -64,7 +66,7 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'), res = 10000) {
       ep[y < x, `:=`(x=y,y=x)]
 
       ## Pull out the entire chromosome sparse matrix
-      sparseMat <- as.data.table(strawr::straw(norm = "NONE", fname = hic[i],
+      sparseMat <- as.data.table(strawr::straw(norm = norm, fname = hic[i],
                                                chr1loc = chroms[j],
                                                chr2loc = chroms[j],
                                                unit = "BP",
