@@ -9,7 +9,7 @@
 #' @export
 #'
 extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'),
-                          res = 10000, norm = 'NONE') {
+                          res = 10000, norm = 'NONE', matrix = 'observed') {
 
   ## TODO
   ## Write helper function to bin bedpe interactions by resolution
@@ -71,7 +71,7 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'),
                                                chr2loc = chroms[j],
                                                unit = "BP",
                                                binsize = res,
-                                               matrix = "observed"))
+                                               matrix = matrix))
 
       ## Update progress
       pb$tick(tokens=list(step=sprintf('Extracting chr%s from %s',
