@@ -9,7 +9,8 @@ extractCounts(
   hic,
   chroms = c(1:22, "X", "Y"),
   res = 10000,
-  norm = "NONE"
+  norm = "NONE",
+  matrix = "observed"
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ extractCounts(
 \item{res}{Resolution of bedpe bins}
 
 \item{norm}{string hic normalization <NONE/VC/VC_SQRT/KR>.}
+
+\item{matrix}{string matrix values to extract. Either 'observed' or 'oe'.}
 }
 \description{
 Extract counts from .hic file(s)

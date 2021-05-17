@@ -5,6 +5,7 @@
 #' @param chroms Character vector of chromosomes to extract
 #' @param res Resolution of bedpe bins
 #' @param norm string hic normalization <NONE/VC/VC_SQRT/KR>.
+#' @param matrix string matrix values to extract. Either 'observed' or 'oe'.
 #'
 #' @export
 #'
