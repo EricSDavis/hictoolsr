@@ -33,7 +33,7 @@ txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 
 ## Generate 50Kb bins across hg19
 library(GenomicRanges)
-bins <- tileGenome(seqinfo(txdb), tilewidth = 10e3, cut.last.tile.in.chrom = TRUE)
+bins <- tileGenome(seqinfo(txdb), tilewidth = 50e3, cut.last.tile.in.chrom = TRUE)
 
 ## Calculate all 50Kb bin pairs within 1Mb
 calcPairs(gr = bins, windowSize = 1e6)
