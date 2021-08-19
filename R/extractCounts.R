@@ -5,7 +5,7 @@
 #' @param chroms Character vector of chromosomes to extract
 #' @param res Resolution of bedpe bins
 #' @param norm string hic normalization <NONE/VC/VC_SQRT/KR>.
-#' @param matrix string matrix values to extract. Either 'observed' or 'oe'.
+#' @param matrix string matrix values to extract. Either 'observed', 'oe', or 'expected'.
 #'
 #' @export
 #'
@@ -15,7 +15,7 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'),
   ## TODO
   ## Write helper function to bin bedpe interactions by resolution
   ##    Make it flexible enough to handle data.tables/frames and GInteraction objects
-  ## Apply helper functino in extract Counts
+  ## Apply helper function in extract Counts
 
   ## Start progress bar
   pb <- progress::progress_bar$new(

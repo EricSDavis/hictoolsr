@@ -24,7 +24,7 @@ extractCounts(
 
 \item{norm}{string hic normalization <NONE/VC/VC_SQRT/KR>.}
 
-\item{matrix}{string matrix values to extract. Either 'observed' or 'oe'.}
+\item{matrix}{string matrix values to extract. Either 'observed', 'oe', or 'expected'.}
 }
 \description{
 Extract counts from .hic file(s)
