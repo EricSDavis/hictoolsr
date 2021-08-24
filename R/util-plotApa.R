@@ -1,4 +1,4 @@
-## Utility functions for bb_plotApa
+## Utility functions for plotApa
 
 ## Error checking functions --------------------------------------------------------------
 
@@ -70,7 +70,7 @@ check_apa_zrange <- function(zrange) {
 }
 
 
-## bb_plotApa functions ------------------------------------------------------------------
+## plotApa functions ------------------------------------------------------------------
 
 ## Define a function that sets the zrange if it is null
 set_zrange <- function(apa_plot){
@@ -114,7 +114,7 @@ set_zrange <- function(apa_plot){
 
 }
 
-## From BentoBox
+## From plotgardener
 ## Define a function that converts coordinates/dimensions into default units
 defaultUnits <- function(object, default.units){
 
@@ -216,9 +216,9 @@ defaultUnits <- function(object, default.units){
 
 }
 
-## From BentoBox
+## From plotgardener
 ## Define a function that maps a vector to colors
-bb_maptocolors <- function(vec, col, num = 100, range = NULL){
+mapColors <- function(vec, col, num = 100, range = NULL){
 
   if (is.null(range) == TRUE){
     breaks <- seq(min(vec), max(vec), length.out = num)
@@ -235,7 +235,7 @@ bb_maptocolors <- function(vec, col, num = 100, range = NULL){
 
 }
 
-## From BentoBox
+## From plotgardener
 ## Define a function to grab the name of a viewport
 viewport_name <- function(viewport){
 
@@ -243,22 +243,22 @@ viewport_name <- function(viewport){
 
 }
 
-## From BentoBox
+## From plotgardener
 ## Define a function to get a list of current viewports
 current_viewports <- function(){
 
-  if (!"bb_page" %in% names(lapply(current.vpTree()$children, viewport_name))){
+  if (!"page" %in% names(lapply(current.vpTree()$children, viewport_name))){
 
     current <- as.list(names(lapply(current.vpTree()$children, viewport_name)))
 
   } else {
 
     ## Check for groups
-    page_children <- names(lapply(current.vpTree()$children$bb_page$children, viewport_name))
+    page_children <- names(lapply(current.vpTree()$children$page$children, viewport_name))
 
-    if (length(grep(pattern = "bb_group", x = page_children)) > 0){
+    if (length(grep(pattern = "group", x = page_children)) > 0){
 
-      group_vps <- as.list(page_children[grep(pattern = "bb_group", x = page_children)])
+      group_vps <- as.list(page_children[grep(pattern = "group", x = page_children)])
 
       group_children <- unlist(lapply(group_vps, vp_children), recursive = F)
 
@@ -277,11 +277,11 @@ current_viewports <- function(){
   return(current)
 }
 
-## From BentoBox
-## Define a function to make sure a bb_page viewport exists
-check_bbpage <- function(error){
+## From plotgardener
+## Define a function to make sure a page viewport exists
+check_page <- function(error){
 
-  if (!"bb_page" %in% current.vpPath()){
+  if (!"page" %in% current.vpPath()){
 
     stop(error, call. = FALSE)
 
@@ -289,15 +289,15 @@ check_bbpage <- function(error){
 
 }
 
-## From BentoBox
+## From plotgardener
 ## Define a function to convert to page units
 convert_page <- function(object){
 
 
 
-  ## Get page_height and its units from bbEnv through bb_makepage
-  page_height <- get("page_height", envir = BentoBox:::bbEnv)
-  page_units <- get("page_units", envir = BentoBox:::bbEnv)
+  ## Get page_height and its units from pgEnv through pageCreate
+  page_height <- get("page_height", envir = plotgardener:::pgEnv)
+  page_units <- get("page_units", envir = plotgardener:::pgEnv)
 
   ## Convert x and y coordinates and height and width to same page_units
   old_x <- object$x
@@ -329,7 +329,7 @@ parseParams2 <- function(params = params,
   ## Place this function inside the parent function
   ##
   ## defaultArgs: List of defaults for each argument of parent function
-  ## params: bb_params object to override default arguments of parent function
+  ## params: pgParams object to override default arguments of parent function
   ## declaredArgs: List of arguments to override all others
 
   ## Remove 'params' and '...' from defaultArgs and declaredArgs
@@ -338,10 +338,10 @@ parseParams2 <- function(params = params,
   if ("..." %in% names(defaultArgs)) defaultArgs[["..."]] <- NULL
   if ("..." %in% names(declaredArgs)) declaredArgs[["..."]] <- NULL
 
-  ## If bb_params are supplied override matching defaultArguments
+  ## If pgParams are supplied override matching defaultArguments
   if (!is.null(params)) {
 
-    if (class(params) == "bb_params") {
+    if (class(params) == "pgParams") {
 
       ## Replace matching defaultArgs with params
       matchedParams <- params[na.omit(sort(match(names(defaultArgs), names(params))))]
@@ -349,7 +349,7 @@ parseParams2 <- function(params = params,
 
     } else {
 
-      stop("'params' must be an object of class bb_params.")
+      stop("'params' must be an object of class pgParams.")
 
     }
 

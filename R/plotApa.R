@@ -1,6 +1,6 @@
 #' Plots Aggregate Peak Analysis Matrix
 #'
-#' @param params optional "bb_params" object containing relevant function parameters
+#' @param params optional "pgParams" object containing relevant function parameters
 #' @param data matrix, list of matricies, or 3 column data.frame of APA results
 #' @param x numeric or unit object specifying x-location of plot
 #' @param y numeric or unit object specifying y-location of plot
@@ -15,7 +15,7 @@
 #' @param n numeric by which to divide aggregate matrix
 #' @param zrange vector of length 2; max and min values to set color scale
 #'
-#' @return Function will draw a APA matrix and return an object of class "bb_apa"
+#' @return Function will draw a APA matrix and return an object of class "apa"
 #'
 #'
 #' @examples
@@ -24,40 +24,40 @@
 #' m <- matrix(data = rnorm(n = 21*21, mean = 0, sd = 2), nrow = 21, ncol = 21)
 #'
 #' ## Define parameters
-#' p <- bb_params(width = 3, height = 3, default.units = "inches")
+#' p <- pgParams(width = 3, height = 3, default.units = "inches")
 #'
 #' ## Create page
-#' bb_pageCreate(params = p)
+#' pageCreate(params = p)
 #'
 #' ## Plot apa
-#' plot <- bb_plotApa(apa = m,
-#'                    x = p$width/2, y = p$height/2,
-#'                    width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
-#'                    palette = colorRampPalette(c("blue", "white", "red")), zrange = NULL)
+#' plot <- plotApa(apa = m,
+#'                 x = p$width/2, y = p$height/2,
+#'                 width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
+#'                 palette = colorRampPalette(c("blue", "white", "red")), zrange = NULL)
 #'
 #' ## Annotate legend
-#' bb_annoHeatmapLegend(plot = plot,
-#'                      x = 2.3, y = 0.75, width = 0.1, height = 0.75)
+#' annoHeatmapLegend(plot = plot,
+#'                   x = 2.3, y = 0.75, width = 0.1, height = 0.75)
 #'
 #'
 #' ## Create sequential matrix
 #' m <- matrix(data = sample(0:100, 21*21, replace = T), nrow = 21, ncol = 21)
 #'
 #' ## Define parameters
-#' p <- bb_params(width = 3, height = 3, default.units = "inches")
+#' p <- pgParams(width = 3, height = 3, default.units = "inches")
 #'
 #' ## Create page
-#' bb_pageCreate(params = p)
+#' pageCreate(params = p)
 #'
 #' ## Plot apa
-#' plot <- bb_plotApa(apa = m,
-#'                    x = p$width/2, y = p$height/2,
-#'                    width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
-#'                    palette = colorRampPalette(c("white", "dark red")), zrange = NULL)
+#' plot <- plotApa(apa = m,
+#'                 x = p$width/2, y = p$height/2,
+#'                 width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
+#'                 palette = colorRampPalette(c("white", "dark red")), zrange = NULL)
 #'
 #' ## Annotate legend
-#' bb_annoHeatmapLegend(plot = plot,
-#'                      x = 2.3, y = 0.75, width = 0.1, height = 0.75)
+#' annoHeatmapLegend(plot = plot,
+#'                   x = 2.3, y = 0.75, width = 0.1, height = 0.75)
 #'
 #'
 #' @export
@@ -88,7 +88,7 @@ plotApa <- function(params = NULL, apa,
                 grobs = NULL
               )
     ),
-    class = "bb_apa"
+    class = "apa"
   )
 
   ## Set attributes for object
@@ -140,9 +140,9 @@ plotApa <- function(params = NULL, apa,
   apa_plot <- set_zrange(apa_plot)
 
   ## Map values to colors
-  colv <- bb_maptocolors(vec = as.vector(apa_plot$apa),
-                         col = apa_plot$color_palette,
-                         num = 1000, range = apa_plot$zrange)
+  colv <- mapColors(vec = as.vector(apa_plot$apa),
+                    col = apa_plot$color_palette,
+                    num = 1000, range = apa_plot$zrange)
 
   ## Format color vector back to apa matrix
   m <- matrix(data = colv, nrow = nrow(apa_plot$apa), ncol = ncol(apa_plot$apa))
@@ -151,11 +151,11 @@ plotApa <- function(params = NULL, apa,
 
   ## Get viewport name
   currentViewports <- current_viewports()
-  vp_name <- paste0("bb_apa", length(grep(pattern = "bb_apa", x = currentViewports)) + 1)
+  vp_name <- paste0("apa", length(grep(pattern = "apa", x = currentViewports)) + 1)
 
 
   ## If placing information is provided but plot == TRUE,
-  ## set up it's own viewport separate from bb_makepage
+  ## set up it's own viewport separate from pageCreate
 
   ## Not translating into page_coordinates
   if (is.null(apa_plot$x) & is.null(apa_plot$y)){
@@ -166,15 +166,15 @@ plotApa <- function(params = NULL, apa,
 
     if (apa_plot$draw == TRUE){
 
-      vp$name <- "bb_hic1"
+      vp$name <- "apa1"
       grid.newpage()
 
     }
 
   } else {
 
-    ## Check that BentoBox page exists
-    check_bbpage("Use bb_pageCreate() to make a BentoBox page to place a plot.")
+    ## Check that plotgardener page exists
+    check_page("Use pageCreate() to make a plotgardener page to place a plot.")
 
     ## Convert coordinates into same units as page
     page_coords <- convert_page(object = apa_plot)
@@ -190,19 +190,19 @@ plotApa <- function(params = NULL, apa,
   ## Handle graphical objects ------------------------------------------------------------
 
   ## Initialize gTree for grobs
-  assign("apa_grobs", gTree(vp = vp), envir = BentoBox:::bbEnv)
+  assign("apa_grobs", gTree(vp = vp), envir = plotgardener:::pgEnv)
 
   ## Make grobs
   apaRaster <- rasterGrob(image = m, interpolate = F)
 
   ## Assign grobs to gTree
   assign(x = "apa_grobs",
-         value = addGrob(gTree = get("apa_grobs", envir = BentoBox:::bbEnv),
+         value = addGrob(gTree = get("apa_grobs", envir = plotgardener:::pgEnv),
                          child = apaRaster),
-         envir = BentoBox:::bbEnv)
+         envir = plotgardener:::pgEnv)
 
   ## Add grobs to object
-  apa_plot$grobs <- get("apa_grobs", envir = BentoBox:::bbEnv)
+  apa_plot$grobs <- get("apa_grobs", envir = plotgardener:::pgEnv)
 
   ## Plot grobs
   if (apa_plot$draw) {

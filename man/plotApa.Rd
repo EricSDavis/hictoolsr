@@ -20,7 +20,7 @@ plotApa(
 )
 }
 \arguments{
-\item{params}{optional "bb_params" object containing relevant function parameters}
+\item{params}{optional "pgParams" object containing relevant function parameters}
 
 \item{x}{numeric or unit object specifying x-location of plot}
 
@@ -47,7 +47,7 @@ height are only given as numeric vectors}
 \item{data}{matrix, list of matricies, or 3 column data.frame of APA results}
 }
 \value{
-Function will draw a APA matrix and return an object of class "bb_apa"
+Function will draw a APA matrix and return an object of class "apa"
 }
 \description{
 Plots Aggregate Peak Analysis Matrix
@@ -58,40 +58,40 @@ Plots Aggregate Peak Analysis Matrix
 m <- matrix(data = rnorm(n = 21*21, mean = 0, sd = 2), nrow = 21, ncol = 21)
 
 ## Define parameters
-p <- bb_params(width = 3, height = 3, default.units = "inches")
+p <- pgParams(width = 3, height = 3, default.units = "inches")
 
 ## Create page
-bb_pageCreate(params = p)
+pageCreate(params = p)
 
 ## Plot apa
-plot <- bb_plotApa(apa = m,
-                   x = p$width/2, y = p$height/2,
-                   width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
-                   palette = colorRampPalette(c("blue", "white", "red")), zrange = NULL)
+plot <- plotApa(apa = m,
+                x = p$width/2, y = p$height/2,
+                width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
+                palette = colorRampPalette(c("blue", "white", "red")), zrange = NULL)
 
 ## Annotate legend
-bb_annoHeatmapLegend(plot = plot,
-                     x = 2.3, y = 0.75, width = 0.1, height = 0.75)
+annoHeatmapLegend(plot = plot,
+                  x = 2.3, y = 0.75, width = 0.1, height = 0.75)
 
 
 ## Create sequential matrix
 m <- matrix(data = sample(0:100, 21*21, replace = T), nrow = 21, ncol = 21)
 
 ## Define parameters
-p <- bb_params(width = 3, height = 3, default.units = "inches")
+p <- pgParams(width = 3, height = 3, default.units = "inches")
 
 ## Create page
-bb_pageCreate(params = p)
+pageCreate(params = p)
 
 ## Plot apa
-plot <- bb_plotApa(apa = m,
-                   x = p$width/2, y = p$height/2,
-                   width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
-                   palette = colorRampPalette(c("white", "dark red")), zrange = NULL)
+plot <- plotApa(apa = m,
+                x = p$width/2, y = p$height/2,
+                width = p$width*0.5, height = p$width*0.5, just = c("center", "center"),
+                palette = colorRampPalette(c("white", "dark red")), zrange = NULL)
 
 ## Annotate legend
-bb_annoHeatmapLegend(plot = plot,
-                     x = 2.3, y = 0.75, width = 0.1, height = 0.75)
+annoHeatmapLegend(plot = plot,
+                  x = 2.3, y = 0.75, width = 0.1, height = 0.75)
 
 
 }
