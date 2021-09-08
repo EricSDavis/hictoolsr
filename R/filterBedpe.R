@@ -36,6 +36,9 @@ filterBedpe <- function(bedpe, res, buffer) {
     bedpe <- binBedpe(bedpe, res, a1Pos = 'center', a2Pos = 'center')
   }
 
+  ## Store the metadata columns
+  mc <- mcols(bedpe)
+
   ## Convert to data.table in bedpe format
   bedpe <-
     as.data.table(bedpe)[,c(1:3, 6:8)] %>%
@@ -54,7 +57,11 @@ filterBedpe <- function(bedpe, res, buffer) {
   ## Return interactions that don't intersect the diagonal
   bedpe <- bedpe[is.na(d) | d > y, -c('d')]
 
+  ## Convert to GInteractions object and add back metadata columns
+  bedpe <- as_ginteractions(bedpe)
+  mcols(bedpe) <- mc
+
   ## Return GInteractions object
-  return(as_ginteractions(bedpe))
+  return(bedpe)
 
 }
