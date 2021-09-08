@@ -37,12 +37,14 @@ filterBedpe <- function(bedpe, res, buffer) {
   }
 
   ## Store the metadata columns
-  mc <- mcols(bedpe)
+  mc <- as.data.table(mcols(bedpe))
 
   ## Convert to data.table in bedpe format
   bedpe <-
     as.data.table(bedpe)[,c(1:3, 6:8)] %>%
     `colnames<-`(c("chr1", "start1", "end1", "chr2", "start2", "end2"))
+
+  bedpe <- cbind(bedpe, mc)
 
 
   ## Calculate and filter by distances ---------------------------------------------------
@@ -50,7 +52,7 @@ filterBedpe <- function(bedpe, res, buffer) {
   ## Distance from center bedpe pixel to corner of apa
   y <- sqrt((res*(buffer*2 + 1))^2 * 2) / 2
 
-  ## For interchromosomal reads:
+  ## For intrachromosomal reads:
   ## Distance from diagonal to center bedpe pixel
   bedpe[chr1 == chr2, d := (sqrt((abs(start2 - start1)^2 * 2)) / 2)]
 
@@ -58,8 +60,7 @@ filterBedpe <- function(bedpe, res, buffer) {
   bedpe <- bedpe[is.na(d) | d > y, -c('d')]
 
   ## Convert to GInteractions object and add back metadata columns
-  bedpe <- as_ginteractions(bedpe)
-  mcols(bedpe) <- mc
+  bedpe <- as_ginteractions(bedpe, keep.extra.columns = TRUE)
 
   ## Return GInteractions object
   return(bedpe)
