@@ -324,7 +324,7 @@ convert_page <- function(object){
 ## Define parameter parsing function
 parseParams2 <- function(params = params,
                          defaultArgs = formals(eval(match.call()[[1]])),
-                         declaredArgs = lapply(match.call()[-1], eval)) {
+                         declaredArgs = lapply(match.call()[-1], eval.parent, n=2)) {
 
   ## Place this function inside the parent function
   ##

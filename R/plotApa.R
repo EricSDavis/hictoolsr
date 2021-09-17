@@ -74,7 +74,7 @@ plotApa <- function(params = NULL, apa,
   parsedArgs <- parseParams2(
     params = params,
     defaultArgs = formals(eval(match.call()[[1]])),
-    declaredArgs = lapply(match.call()[-1], eval)
+    declaredArgs = lapply(match.call()[-1], eval.parent, n=2)
   )
 
   ## Evaluate parsed arguments
