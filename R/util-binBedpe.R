@@ -8,13 +8,14 @@
 #' @rdname shiftAnchor
 #'
 #' @examples
+#' library(GenomicRanges)
 #'
 #' ## Create example GRanges
 #' gr1 <- GRanges(seqnames = "chr1",
 #'                ranges = IRanges(start = rep(5000,3), end = rep(6000,3)),
 #'                strand = c('+', '-', '*'))
 #'
-#' gr2 <- gr1 %>% promoters(upstream = 2000, downstream = 200)
+#' gr2 <- gr1 |> promoters(upstream = 2000, downstream = 200)
 #'
 #' ## Shifting anchors by keyword
 #' shiftAnchor(gr1, 'start')
@@ -96,13 +97,14 @@ shiftAnchor <- function(a, p) {
 #' @rdname binAnchor
 #'
 #' @examples
+#' library(GenomicRanges)
 #'
 #' ## Create example GRanges
 #' gr1 <- GRanges(seqnames = "chr1",
 #'                ranges = IRanges(start = rep(5000,3), end = rep(6000,3)),
 #'                strand = c('+', '-', '*'))
 #'
-#' gr2 <- gr1 %>% promoters(upstream = 2000, downstream = 200)
+#' gr2 <- gr1 |> promoters(upstream = 2000, downstream = 200)
 #'
 #' ## Binning the results
 #' binAnchor(gr1, 'start', 1000)

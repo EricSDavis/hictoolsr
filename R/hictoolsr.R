@@ -12,7 +12,7 @@
 #' @rawNamespace import(dplyr, except = c(last, union, intersect, setdiff, n_distinct, between, n, first))
 #' @importFrom tidyr complete full_seq
 #' @importFrom reshape2 acast
-#' @importFrom magrittr %<>%
+#' @importFrom magrittr %<>% %>%
 #' @importFrom S4Vectors width mcols `mcols<-` first second DataFrame
 #'
 "_PACKAGE"
