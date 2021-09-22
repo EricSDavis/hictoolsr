@@ -21,6 +21,14 @@ jobs:
         with:
           use-public-rspm: true
 
+      - name: Install BiocManager
+        run: |
+          message(paste('****', Sys.time(), 'installing BiocManager ****'))
+          remotes::install_cran("BiocManager")
+          BiocManager::install(version="devel")
+          BiocManager::install("plotgardener")
+        shell: Rscript {0}
+
       - uses: r-lib/actions/setup-r-dependencies@v1
         with:
           extra-packages: pkgdown
