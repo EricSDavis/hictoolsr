@@ -1,0 +1,13 @@
+url: https://EricSDavis.github.io/hictoolsr
+
+title: hictoolsr
+
+authors:
+  Eric Davis:
+    href: https://ericscottdavis.com
+  Douglas Phanstiel:
+    href: http://phanstiel-lab.med.unc.edu
+
+figures:
+  fig.width: 5.5
+  fig.retina: 1
