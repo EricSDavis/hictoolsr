@@ -24,6 +24,7 @@ jobs:
       - name: Install BiocManager
         run: |
           message(paste('****', Sys.time(), 'installing BiocManager ****'))
+          install.packages("remotes")
           remotes::install_cran("BiocManager")
           BiocManager::install(version="devel")
           BiocManager::install("plotgardener")
