@@ -16,7 +16,8 @@ Suggests:
     purrr,
     ggplot2,
     DESeq2,
-    dbscan
+    dbscan,
+    apeglm
 Imports:
     Rcpp,
     rtracklayer,
