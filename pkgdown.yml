@@ -1,8 +1,9 @@
 pandoc: 2.11.4
 pkgdown: 1.6.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2021-09-24T13:43Z
+articles:
+  differential_loop_calling: differential_loop_calling.html
+last_built: 2021-10-11T17:20Z
 urls:
   reference: https://EricSDavis.github.io/hictoolsr/reference
   article: https://EricSDavis.github.io/hictoolsr/articles

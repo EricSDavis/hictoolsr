@@ -31,6 +31,15 @@
     <loc>https://EricSDavis.github.io/hictoolsr/reference/hictoolsr-package.html</loc>
   </url>
   <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/reference/loopApaFsHic.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/reference/loopApaWtHic.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/reference/loopCounts.html</loc>
+  </url>
+  <url>
     <loc>https://EricSDavis.github.io/hictoolsr/reference/makeGInteractionsFromDataFrame.html</loc>
   </url>
   <url>
@@ -41,5 +50,8 @@
   </url>
   <url>
     <loc>https://EricSDavis.github.io/hictoolsr/reference/shiftAnchor.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/articles/differential_loop_calling.html</loc>
   </url>
 </urlset>

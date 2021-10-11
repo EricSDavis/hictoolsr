@@ -79,16 +79,33 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
+    <span class="fa fa-home fa-lg"></span>
      
   </a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Workflows
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/differential_loop_calling.html">Differential loop calling</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/EricSDavis/hictoolsr">
+    <span class="fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
       </ul>
       
     </div><!--/.nav-collapse -->
@@ -116,7 +133,7 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
+          <h2 id="section-about-hictoolsr" class="hasAnchor"><a href="#section-about-hictoolsr" class="anchor"></a>About hictoolsr</h2>
           <p class="section-desc"></p>
         </th>
       </tr>
@@ -128,22 +145,48 @@
       <tr>
         
         <td>
-          <p><code><a href="binAnchor.html">binAnchor()</a></code> </p>
+          <p><code><a href="hictoolsr-package.html">hictoolsr-package</a></code> </p>
         </td>
-        <td><p>Define helper function for binning an anchor</p></td>
-      </tr><tr>
+        <td><p>hictoolsr: a set of tools for Hi-C data analysis</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-extracting-hi-c-counts" class="hasAnchor"><a href="#section-extracting-hi-c-counts" class="anchor"></a>Extracting Hi-C Counts</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
         
         <td>
-          <p><code><a href="binBedpe.html">binBedpe()</a></code> </p>
+          <p><code><a href="extractCounts.html">extractCounts()</a></code> </p>
         </td>
-        <td><p>Define function to flexibly bin bedpe data by hic resolution</p></td>
+        <td><p>Extract counts from .hic file(s)</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="calcApa.html">calcApa()</a></code> </p>
         </td>
         <td><p>Extract BEDPE interactions from a Hi-C matrix</p></td>
-      </tr><tr>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-generating-paired-interactions" class="hasAnchor"><a href="#section-generating-paired-interactions" class="anchor"></a>Generating Paired Interactions</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
         
         <td>
           <p><code><a href="calcBedpe.html">calcBedpe()</a></code> </p>
@@ -155,18 +198,25 @@
           <p><code><a href="calcPairs.html">calcPairs()</a></code> </p>
         </td>
         <td><p>Define function to calculate all paired interactions within a windowSize</p></td>
-      </tr><tr>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-merging-filtering-binning" class="hasAnchor"><a href="#section-merging-filtering-binning" class="anchor"></a>Merging/Filtering/Binning</h2>
+          <p class="section-desc"><p>Tools for merging, filtering, or binning paired interactions.</p></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
         
         <td>
-          <p><code><a href="check_binned.html">check_binned()</a></code> </p>
+          <p><code><a href="binBedpe.html">binBedpe()</a></code> </p>
         </td>
-        <td><p>Helper function to check that a GInteractions object has been binned</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="extractCounts.html">extractCounts()</a></code> </p>
-        </td>
-        <td><p>Extract counts from .hic file(s)</p></td>
+        <td><p>Define function to flexibly bin bedpe data by hic resolution</p></td>
       </tr><tr>
         
         <td>
@@ -176,9 +226,9 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="hictoolsr-package.html">hictoolsr-package</a></code> </p>
+          <p><code><a href="mergeBedpe.html">mergeBedpe()</a></code> </p>
         </td>
-        <td><p>hictoolsr: a set of tools for Hi-C data analysis</p></td>
+        <td><p>Read-in and merge BEDPE Interactions by Genomic distance with DBSCAN</p></td>
       </tr><tr>
         
         <td>
@@ -188,21 +238,71 @@
       </tr><tr>
         
         <td>
-          <p><code><a href="mergeBedpe.html">mergeBedpe()</a></code> </p>
+          <p><code><a href="binAnchor.html">binAnchor()</a></code> </p>
         </td>
-        <td><p>Read-in and merge BEDPE Interactions by Genomic distance with DBSCAN</p></td>
+        <td><p>Define helper function for binning an anchor</p></td>
       </tr><tr>
         
         <td>
-          <p><code><a href="plotApa.html">plotApa()</a></code> </p>
+          <p><code><a href="check_binned.html">check_binned()</a></code> </p>
         </td>
-        <td><p>Plots Aggregate Peak Analysis Matrix</p></td>
+        <td><p>Helper function to check that a GInteractions object has been binned</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="shiftAnchor.html">shiftAnchor()</a></code> </p>
         </td>
         <td><p>Define helper function for flexibly shifting an anchor</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-plotting-functions" class="hasAnchor"><a href="#section-plotting-functions" class="anchor"></a>Plotting Functions</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="plotApa.html">plotApa()</a></code> </p>
+        </td>
+        <td><p>Plots Aggregate Peak Analysis Matrix</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-example-datasets" class="hasAnchor"><a href="#section-example-datasets" class="anchor"></a>Example Datasets</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="loopApaFsHic.html">loopApaFsHic</a></code> </p>
+        </td>
+        <td><p>Aggregate peak analysis of differential loop results from FS Hi-C</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="loopApaWtHic.html">loopApaWtHic</a></code> </p>
+        </td>
+        <td><p>Aggregate peak analysis of differential loop results from WT Hi-C</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="loopCounts.html">loopCounts</a></code> </p>
+        </td>
+        <td><p>Merged loop calls with contact frequency from replicate Hi-C experiments</p></td>
       </tr>
     </tbody>
     </table>
