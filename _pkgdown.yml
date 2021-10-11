@@ -11,3 +11,57 @@ authors:
 figures:
   fig.width: 5.5
   fig.retina: 1
+
+navbar:
+  type: default
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: Workflows
+      menu:
+        - text: Differential loop calling
+          href: articles/differential_loop_calling.html
+    - text: Reference
+      href: reference/index.html
+  right:
+    - icon: fab fa-github fa-lg
+      href: https://github.com/EricSDavis/hictoolsr
+
+reference:
+  - title: "About hictoolsr"
+    contents:
+      - hictoolsr
+
+  - title: "Extracting Hi-C Counts"
+    contents:
+      - extractCounts
+      - calcApa
+
+  - title: "Generating Paired Interactions"
+    contents:
+      - calcBedpe
+      - calcPairs
+
+  - title: "Merging/Filtering/Binning"
+    desc: >
+      Tools for merging, filtering, or binning
+      paired interactions.
+    contents:
+      - binBedpe
+      - filterBedpe
+      - mergeBedpe
+      - as_ginteractions
+      - makeGInteractionsFromDataFrame
+      - binAnchor
+      - check_binned
+      - shiftAnchor
+
+  - title: "Plotting Functions"
+    contents:
+      - plotApa
+
+  - title: "Example Datasets"
+    contents:
+      - loopApaFsHic
+      - loopApaWtHic
+      - loopCounts

@@ -192,8 +192,20 @@ plotApa <- function(params = NULL, apa,
   ## Initialize gTree for grobs
   assign("apa_grobs", gTree(vp = vp), envir = plotgardener:::pgEnv)
 
+  ## Assign name to grob
+  name <- paste0(
+    "APA",
+    length(grep(
+      pattern = "apa_grobs",
+      x = grid.ls(
+        print = FALSE,
+        recursive = FALSE
+      )
+    )) + 1
+  )
+
   ## Make grobs
-  apaRaster <- rasterGrob(image = m, interpolate = F)
+  apaRaster <- rasterGrob(image = m, interpolate = F, name = name)
 
   ## Assign grobs to gTree
   assign(x = "apa_grobs",
@@ -209,7 +221,8 @@ plotApa <- function(params = NULL, apa,
     grid.draw(apa_plot$grobs)
   }
 
-  ## Return object
-  return(apa_plot)
-
+  ## Return object -----------------------------------------------------------------------
+  message("APA[", apaRaster$name, "]")
+  invisible(apa_plot)
 }
+
