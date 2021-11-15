@@ -37,11 +37,11 @@ extractCounts <- function(bedpe, hic, chroms = c(1:22, 'X', 'Y'),
     bedpe <- binBedpe(bedpe, res, a1Pos = 'center', a2Pos = 'center')
   }
 
-  ## Convert chroms to character
-  chroms <- as.character(chroms)
+  ## Convert chroms to character and remove chr if it exists
+  chromsomes <- gsub("chr", "", as.character(chroms))
 
   ## Split binned binnedEP by chromosome
-  chrBedpe <- lapply(chroms, function(chr) {
+  chrBedpe <- lapply(chromsomes, function(chr) {
     bedpe[seqnames(first(bedpe)) == paste0('chr',chr)]
   })
 
