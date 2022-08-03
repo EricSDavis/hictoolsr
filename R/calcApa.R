@@ -100,6 +100,14 @@ calcApa <- function(bedpe, hic, norm = 'NONE', res = 10000, buffer = 5, filter =
   locs <- regs[, .(chr1loc = paste(chr1, min, max, sep = ':'),
                    chr2loc = paste(chr2, min, max, sep = ':'))]
 
+  ## Add condition to check and correct "chr" designation
+  ## in the .hic file
+  hicChroms <- strawr::readHicChroms(hic)$name
+  if (length(grep("chr", hicChroms)) != 0) {
+    locs$chr1loc <- paste0("chr", locs$chr1loc)
+    locs$chr2loc <- paste0("chr", locs$chr2loc)
+  }
+
   ## Get group information from chr combinations
   bedpe[, GRP := .GRP, by = .(chr1, chr2)]
 

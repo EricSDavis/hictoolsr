@@ -1,6 +1,6 @@
 Package: hictoolsr
 Title: An R Package for Hi-C Data Analysis
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: person("Eric", "Davis", email = "esdavis@live.unc.edu", role = c("aut", "cre"))
 Description: hictoolsr is an R package that contains a collection of useful tools for Hi-C
     data analysis.
