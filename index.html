@@ -27,6 +27,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -39,7 +41,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">hictoolsr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -52,7 +54,7 @@
   </a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Workflows
      
     <span class="caret"></span>
@@ -69,7 +71,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/EricSDavis/hictoolsr">
+  <a href="https://github.com/EricSDavis/hictoolsr" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -86,9 +88,8 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="hictoolsr-hi-c-analysis-in-r-" class="section level1">
-<div class="page-header"><h1 class="hasAnchor">
-<a href="#hictoolsr-hi-c-analysis-in-r-" class="anchor"></a>hictoolsr: Hi-C analysis in R <img src="reference/figures/logo.png" id="hictoolsr_logo" align="right" width="125">
+<div class="section level1">
+<div class="page-header"><h1 id="hictoolsr-hi-c-analysis-in-r-">hictoolsr: Hi-C analysis in R <img src="reference/figures/logo.png" id="hictoolsr_logo" align="right" width="125"><a class="anchor" aria-label="anchor" href="#hictoolsr-hi-c-analysis-in-r-"></a>
 </h1></div>
 <p><code>hictoolsr</code> is an R package with a collection of useful tools for Hi-C data analysis. The tools fall into the following broad categories:</p>
 <ul>
@@ -109,32 +110,32 @@
 <p>Additional visualization functions that are compatible with the <code>plotgardener</code> package.</p>
 </li>
 </ul>
-<div id="installation" class="section level2">
-<h2 class="hasAnchor">
-<a href="#installation" class="anchor"></a>Installation</h2>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
 <p>This package can be installed via github:</p>
-<pre class="{r}"><code>if (!requireNamespace("remotes", quietly = TRUE))
-    install.packages("remotes")
-remotes::install_github("EricSDavis/hictoolsr")</code></pre>
+<pre class="{r}"><code><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"remotes"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"EricSDavis/hictoolsr"</span><span class="op">)</span></span></code></pre>
 </div>
-<div id="workflows" class="section level2">
-<h2 class="hasAnchor">
-<a href="#workflows" class="anchor"></a>Workflows</h2>
+<div class="section level2">
+<h2 id="workflows">Workflows<a class="anchor" aria-label="anchor" href="#workflows"></a>
+</h2>
 <p>We have provided a series of workflows that demonstrate how <code>hictoolsr</code> can be integrated and used with existing packages to analyze genomic data.</p>
-<div id="differential-loop-calling" class="section level3">
-<h3 class="hasAnchor">
-<a href="#differential-loop-calling" class="anchor"></a>Differential Loop Calling</h3>
+<div class="section level3">
+<h3 id="differential-loop-calling">Differential Loop Calling<a class="anchor" aria-label="anchor" href="#differential-loop-calling"></a>
+</h3>
 <p>This workflow demonstrates how to identify and visualize differential loops between two biological conditions using the <code>hictoolsr</code>, <code>DESeq2</code>, and <code>plotgardener</code> packages.</p>
 </div>
-<div id="interintrachromosomal-aggregate-analysis" class="section level3">
-<h3 class="hasAnchor">
-<a href="#interintrachromosomal-aggregate-analysis" class="anchor"></a>Inter/Intrachromosomal Aggregate Analysis</h3>
+<div class="section level3">
+<h3 id="interintrachromosomal-aggregate-analysis">Inter/Intrachromosomal Aggregate Analysis<a class="anchor" aria-label="anchor" href="#interintrachromosomal-aggregate-analysis"></a>
+</h3>
 <p>(Coming soon) This workflow will demonstrate how to aggregate Hi-C signal from interactions between proteins bound on DNA.</p>
 </div>
 </div>
-<div id="future-updates" class="section level2">
-<h2 class="hasAnchor">
-<a href="#future-updates" class="anchor"></a>Future updates</h2>
+<div class="section level2">
+<h2 id="future-updates">Future updates<a class="anchor" aria-label="anchor" href="#future-updates"></a>
+</h2>
 <p>Improve function naming:</p>
 <ul>
 <li>
@@ -145,13 +146,9 @@ remotes::install_github("EricSDavis/hictoolsr")</code></pre>
 <li>More general names (i.e. <code><a href="reference/binAnchor.html">binAnchor()</a></code> -&gt; <code>binGRanges()</code>)?</li>
 </ul>
 <p><code><a href="reference/binBedpe.html">binBedpe()</a></code></p>
-<ul>
-<li>Improve documentation and examples</li>
-</ul>
+<ul><li>Improve documentation and examples</li></ul>
 <p><code><a href="reference/calcApa.html">calcApa()</a></code></p>
-<ul>
-<li>Improve documentation and examples</li>
-</ul>
+<ul><li>Improve documentation and examples</li></ul>
 <p><code>calcBepde()</code></p>
 <ul>
 <li>Improve documentation and examples</li>
@@ -166,9 +163,7 @@ remotes::install_github("EricSDavis/hictoolsr")</code></pre>
 <li><p>Move binning warning to its own function</p></li>
 <li>
 <p>Utilize the chromosome extraction method from <code><a href="reference/calcApa.html">calcApa()</a></code></p>
-<ul>
-<li>This might remove the chromosomes argument as well.</li>
-</ul>
+<ul><li>This might remove the chromosomes argument as well.</li></ul>
 </li>
 </ul>
 <p><code><a href="reference/filterBedpe.html">filterBedpe()</a></code></p>
@@ -199,29 +194,42 @@ remotes::install_github("EricSDavis/hictoolsr")</code></pre>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="license">
-<h2>License</h2>
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>GPL (&gt;= 3)</li>
 </ul>
 </div>
-<div class="developers">
-<h2>Developers</h2>
+
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li>
-<a href="https://ericscottdavis.com">Eric Davis</a> <br><small class="roles"> Author, maintainer </small>  </li>
+<li><a href="authors.html#citation">Citing hictoolsr</a></li>
 </ul>
 </div>
+
+<div class="developers">
+<h2 data-toc-skip>Developers</h2>
+<ul class="list-unstyled">
+<li>
+<a href="https://ericscottdavis.com" class="external-link">Eric Davis</a> <br><small class="roles"> Author, maintainer </small>  </li>
+</ul>
+</div>
+
+
 
   </div>
 </div>
 
 
       <footer><div class="copyright">
-  <p>Developed by <a href="https://ericscottdavis.com">Eric Davis</a>.</p>
+  <p></p>
+<p>Developed by <a href="https://ericscottdavis.com" class="external-link">Eric Davis</a>.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>
@@ -229,6 +237,8 @@ remotes::install_github("EricSDavis/hictoolsr")</code></pre>
 
   
 
+
+  
 
   </body>
 </html>

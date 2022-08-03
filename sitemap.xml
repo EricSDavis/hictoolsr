@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/404.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/articles/differential_loop_calling.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/authors.html</loc>
+  </url>
+  <url>
     <loc>https://EricSDavis.github.io/hictoolsr/index.html</loc>
+  </url>
+  <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/news/index.html</loc>
   </url>
   <url>
     <loc>https://EricSDavis.github.io/hictoolsr/reference/binAnchor.html</loc>
@@ -31,6 +46,9 @@
     <loc>https://EricSDavis.github.io/hictoolsr/reference/hictoolsr-package.html</loc>
   </url>
   <url>
+    <loc>https://EricSDavis.github.io/hictoolsr/reference/index.html</loc>
+  </url>
+  <url>
     <loc>https://EricSDavis.github.io/hictoolsr/reference/loopApaFsHic.html</loc>
   </url>
   <url>
@@ -50,8 +68,5 @@
   </url>
   <url>
     <loc>https://EricSDavis.github.io/hictoolsr/reference/shiftAnchor.html</loc>
-  </url>
-  <url>
-    <loc>https://EricSDavis.github.io/hictoolsr/articles/differential_loop_calling.html</loc>
   </url>
 </urlset>

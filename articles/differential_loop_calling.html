@@ -26,6 +26,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -38,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">hictoolsr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -51,7 +53,7 @@
   </a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Workflows
      
     <span class="caret"></span>
@@ -68,7 +70,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/EricSDavis/hictoolsr">
+  <a href="https://github.com/EricSDavis/hictoolsr" class="external-link">
     <span class="fab fa-github fa-lg"></span>
      
   </a>
@@ -83,13 +85,13 @@
 
       
 
-      </header><script src="differential_loop_calling_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Differential loop calling</h1>
-                        <h4 class="author">Eric S. Davis</h4>
+                        <h4 data-toc-skip class="author">Eric S. Davis</h4>
             
-            <h4 class="date">10/21/2021</h4>
+            <h4 data-toc-skip class="date">08/03/2022</h4>
       
       
       <div class="hidden name"><code>differential_loop_calling.Rmd</code></div>
@@ -98,575 +100,574 @@
 
     
     
-<div id="introduction" class="section level2">
-<h2 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h2>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
 <p>In this vignette, we demonstrate the workflow for finding and visualizing differential loops between two biological conditions using the <code>hictoolsr</code>, <code>DESeq2</code>, and <code>plotgardener</code> packages. First, data pre-processing is required to obtain <code>.hic</code> files for each biological replicate and condition along with looping interactions. Loops are then merged between conditions and interaction frequency counts are extracted between loop anchors for each condition and replicate. Differential loops can then be called with <code>DESeq2</code> and the results can be visualized as aggregate peak analysis (APA) plots.</p>
-<p>As an example, we will use data from the paper, “Phase separation drives aberrant chromatin looping and cancer development”, by <a href="https://www.nature.com/articles/s41586-021-03662-5#citeas">Ahn et al. 2021</a> using GEO links <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE143465">GSE143465</a> and <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE143465">GSE143465</a>. This paper explores the oncogenic mechanism of a rare fusion protein in acute myeloid leukemia (AML). The fusion protein, NUP98-HOXA9 (NHA9), contains a DNA-binding domain fused to an intrisically disordered region (IDR) which forms phase-separated condensates and leads to changes in 3D chromatin structure and deregulated gene expression. To explore how phase separation leads to changes in chromatin structure the IDR of NHA9 was made incapable of phase separation by mutating phenylalanine (F) amino acid residues to serines (S), then expressed in HEK293T cells (FS mutant) along with the wildtype (WT). Hi-C, ChIP-seq, and RNA-seq was performed in both WT and FS cell lines to compare chromatin structure, NHA9 binding, and gene expression in response to phase separation.</p>
+<p>As an example, we will use data from the paper, “Phase separation drives aberrant chromatin looping and cancer development”, by <a href="https://www.nature.com/articles/s41586-021-03662-5#citeas" class="external-link">Ahn et al. 2021</a> using GEO links <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE143465" class="external-link">GSE143465</a> and <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE143465" class="external-link">GSE143465</a>. This paper explores the oncogenic mechanism of a rare fusion protein in acute myeloid leukemia (AML). The fusion protein, NUP98-HOXA9 (NHA9), contains a DNA-binding domain fused to an intrisically disordered region (IDR) which forms phase-separated condensates and leads to changes in 3D chromatin structure and deregulated gene expression. To explore how phase separation leads to changes in chromatin structure the IDR of NHA9 was made incapable of phase separation by mutating phenylalanine (F) amino acid residues to serines (S), then expressed in HEK293T cells (FS mutant) along with the wildtype (WT). Hi-C, ChIP-seq, and RNA-seq was performed in both WT and FS cell lines to compare chromatin structure, NHA9 binding, and gene expression in response to phase separation.</p>
 <p>Here, we demonstrate how to find differential loops between the WT and FS biological conditions and visualize the results with aggregate peak analysis plots.</p>
 </div>
-<div id="pre-processing-data" class="section level2">
-<h2 class="hasAnchor">
-<a href="#pre-processing-data" class="anchor"></a>Pre-processing data</h2>
+<div class="section level2">
+<h2 id="pre-processing-data">Pre-processing data<a class="anchor" aria-label="anchor" href="#pre-processing-data"></a>
+</h2>
 <p>Before we can find differential loops, we must first process raw <code>.fastq</code> files into <code>.hic</code> files and identify significant looping interactions. These are pre-processing steps that are conducted outside of <code>hictoolsr</code>. The following sections outline how to process and call loops from Hi-C data using available tools.</p>
-<div id="processing-raw-hi-c-data-with-dietjuicer" class="section level3">
-<h3 class="hasAnchor">
-<a href="#processing-raw-hi-c-data-with-dietjuicer" class="anchor"></a>Processing raw Hi-C data with <code>dietJuicer</code>
+<div class="section level3">
+<h3 id="processing-raw-hi-c-data-with-dietjuicer">Processing raw Hi-C data with <code>dietJuicer</code><a class="anchor" aria-label="anchor" href="#processing-raw-hi-c-data-with-dietjuicer"></a>
 </h3>
-<p>Raw Hi-C fastqs can be converted into <a href="https://github.com/aidenlab/Juicebox/blob/master/HiCFormatV8.md"><code>.hic</code> format</a> using the <a href="https://github.com/EricSDavis/dietJuicer"><code>dietJuicer</code></a> pipeline. The data should be processed at two levels:</p>
+<p>Raw Hi-C fastqs can be converted into <a href="https://github.com/aidenlab/Juicebox/blob/master/HiCFormatV8.md" class="external-link"><code>.hic</code> format</a> using the <a href="https://github.com/EricSDavis/dietJuicer" class="external-link"><code>dietJuicer</code></a> pipeline. The data should be processed at two levels:</p>
 <ol style="list-style-type: decimal">
-<li>Each replicate should be processed individually such that there are <code>.hic</code> files for each. This is necessary for count extraction used as input to <code>DESeq</code>. Note the exception that sequencing replicates should <em>always</em> be merged, even for count extraction. Follow the directions under the <a href="https://github.com/EricSDavis/dietJuicer#quickstart---dietjuicercore"><code>dietJuicerCore</code> workflow</a> to process these samples.</li>
-<li>Replicates can then be merged into a “mega” <code>.hic</code> file. These <code>.hic</code> files are used as input for loop calling. Follow the directions under the <a href="https://github.com/EricSDavis/dietJuicer#creating-a-hi-c-map---dietjuicermerge"><code>dietJuicerMerge</code> workflow</a> to create merged .hic maps.</li>
+<li>Each replicate should be processed individually such that there are <code>.hic</code> files for each. This is necessary for count extraction used as input to <code>DESeq</code>. Note the exception that sequencing replicates should <em>always</em> be merged, even for count extraction. Follow the directions under the <a href="https://github.com/EricSDavis/dietJuicer#quickstart---dietjuicercore" class="external-link"><code>dietJuicerCore</code> workflow</a> to process these samples.</li>
+<li>Replicates can then be merged into a “mega” <code>.hic</code> file. These <code>.hic</code> files are used as input for loop calling. Follow the directions under the <a href="https://github.com/EricSDavis/dietJuicer#creating-a-hi-c-map---dietjuicermerge" class="external-link"><code>dietJuicerMerge</code> workflow</a> to create merged .hic maps.</li>
 </ol>
 </div>
-<div id="calling-loops-with-sip" class="section level3">
-<h3 class="hasAnchor">
-<a href="#calling-loops-with-sip" class="anchor"></a>Calling loops with SIP</h3>
-<p>After creating merged <code>.hic</code> files with <code>dietJucierMerge</code>, <a href="https://github.com/PouletAxel/SIP"><code>SIP</code></a> (Significant Interaction Peak caller) can be used to identify looping interactions.</p>
+<div class="section level3">
+<h3 id="calling-loops-with-sip">Calling loops with SIP<a class="anchor" aria-label="anchor" href="#calling-loops-with-sip"></a>
+</h3>
+<p>After creating merged <code>.hic</code> files with <code>dietJucierMerge</code>, <a href="https://github.com/PouletAxel/SIP" class="external-link"><code>SIP</code></a> (Significant Interaction Peak caller) can be used to identify looping interactions.</p>
 <p>Usage:</p>
 <p><code>java -jar SIP_HiC.jar hic &lt;hicFile&gt; &lt;chrSizeFile&gt; &lt;Output&gt; &lt;juicerToolsPath&gt; [options]</code></p>
 <p>Example (submitting job to UNC’s longleaf cluster):</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> <span class="at">-p</span> general <span class="at">-t</span> 4320 <span class="at">--mem</span><span class="op">=</span>8G <span class="at">--wrap</span><span class="op">=</span><span class="st">"java -jar /proj/phanstiel_lab/software/SIP/SIP_HiC_v1.6.1.jar hic /path/to/file.hic /proj/phanstiel_lab/software/resources/hg19_chromSizes_filt.txt /path/to/output/directory /proj/phanstiel_lab/software/juicer/scripts/juicer_tools.jar -g 2.0 -t 2000 -fdr 0.05"</span></span></code></pre></div>
-<p>Another loop caller, <a href="https://github.com/aidenlab/juicer/wiki/HiCCUPS">HiCCUPS</a>, was used to call loops in the data at <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE143465">GSE143465</a> from <a href="https://www.nature.com/articles/s41586-021-03662-5#citeas">Ahn et al. 2021</a>. Since merging functions in <code>hictoolsr</code> require columns that are only generated through <code>SIP</code>, loops called with <code>SIP</code> are included as example data in <code>hictoolsr</code>.</p>
+<p>Another loop caller, <a href="https://github.com/aidenlab/juicer/wiki/HiCCUPS" class="external-link">HiCCUPS</a>, was used to call loops in the data at <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE143465" class="external-link">GSE143465</a> from <a href="https://www.nature.com/articles/s41586-021-03662-5#citeas" class="external-link">Ahn et al. 2021</a>. Since merging functions in <code>hictoolsr</code> require columns that are only generated through <code>SIP</code>, loops called with <code>SIP</code> are included as example data in <code>hictoolsr</code>.</p>
 </div>
 </div>
-<div id="merging-loops" class="section level2">
-<h2 class="hasAnchor">
-<a href="#merging-loops" class="anchor"></a>Merging loops</h2>
+<div class="section level2">
+<h2 id="merging-loops">Merging loops<a class="anchor" aria-label="anchor" href="#merging-loops"></a>
+</h2>
 <p>We called loops in both conditions to identify loops that are unique to each dataset. However, there are often duplicate loops that are present in both datasets. It is important to merge these together to avoid testing duplicate loops and to catch all unique loops. The <code><a href="../reference/mergeBedpe.html">mergeBedpe()</a></code> function does this, using <code>DBSCAN</code> to combine duplicate loops that are shifted slightly between conditions.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Load packages</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">hictoolsr</span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mhahsler/dbscan">dbscan</a></span><span class="op">)</span>
-
-<span class="co">## Define WT and FS loop file paths</span>
-<span class="va">wt_loops</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/WT_5kbLoops.txt"</span>, package <span class="op">=</span> <span class="st">"hictoolsr"</span><span class="op">)</span>
-<span class="va">fs_loops</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/FS_5kbLoops.txt"</span>, package <span class="op">=</span> <span class="st">"hictoolsr"</span><span class="op">)</span>
-
-<span class="co">## Merge loops and convert to GInteractions</span>
-<span class="va">loops</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="../reference/mergeBedpe.html">mergeBedpe</a></span><span class="op">(</span>bedpeFiles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">wt_loops</span>, <span class="va">fs_loops</span><span class="op">)</span>, res <span class="op">=</span> <span class="fl">10e3</span><span class="op">)</span> |&gt;
-  <span class="fu"><a href="../reference/makeGInteractionsFromDataFrame.html">as_ginteractions</a></span><span class="op">(</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">loops</span><span class="op">)</span>
-<span class="co">#&gt; GInteractions object with 6 interactions and 11 metadata columns:</span>
-<span class="co">#&gt;       seqnames1         ranges1     seqnames2         ranges2 |       color</span>
-<span class="co">#&gt;           &lt;Rle&gt;       &lt;IRanges&gt;         &lt;Rle&gt;       &lt;IRanges&gt; | &lt;character&gt;</span>
-<span class="co">#&gt;   [1]      chr1   950000-960000 ---      chr1  990000-1000000 |       0,0,0</span>
-<span class="co">#&gt;   [2]      chr1 2070000-2080000 ---      chr1 2100000-2110000 |       0,0,0</span>
-<span class="co">#&gt;   [3]      chr1 2120000-2130000 ---      chr1 2310000-2320000 |       0,0,0</span>
-<span class="co">#&gt;   [4]      chr1 2260000-2270000 ---      chr1 2290000-2300000 |       0,0,0</span>
-<span class="co">#&gt;   [5]      chr1 2340000-2350000 ---      chr1 3340000-3350000 |       0,0,0</span>
-<span class="co">#&gt;   [6]      chr1 2340000-2350000 ---      chr1 2470000-2480000 |       0,0,0</span>
-<span class="co">#&gt;       APScoreAvg ProbabilityofEnrichment RegAPScoreAvg Avg_diffMaxNeihgboor_1</span>
-<span class="co">#&gt;        &lt;numeric&gt;               &lt;numeric&gt;     &lt;numeric&gt;              &lt;numeric&gt;</span>
-<span class="co">#&gt;   [1]    1.94235                0.955674       1.44411               0.589269</span>
-<span class="co">#&gt;   [2]    2.22286                0.948697       1.33797               1.119236</span>
-<span class="co">#&gt;   [3]    4.83488                0.997847       2.97869               1.586035</span>
-<span class="co">#&gt;   [4]    1.73253                0.909439       1.44687               0.330902</span>
-<span class="co">#&gt;   [5]    3.99551                0.999175       2.19222               2.815012</span>
-<span class="co">#&gt;   [6]    4.23943                0.992896       2.28334               1.707992</span>
-<span class="co">#&gt;       Avg_diffMaxNeihgboor_2       avg       std     value          source</span>
-<span class="co">#&gt;                    &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;     &lt;character&gt;</span>
-<span class="co">#&gt;   [1]               0.954486   2.59272  0.304534   3.11651 FS_5kbLoops.txt</span>
-<span class="co">#&gt;   [2]               1.287945   1.97545  0.448767   2.97032 FS_5kbLoops.txt</span>
-<span class="co">#&gt;   [3]               2.891005   4.73156  0.728192   6.14136 WT_5kbLoops.txt</span>
-<span class="co">#&gt;   [4]               0.453355   2.10784  0.226152   2.40198 FS_5kbLoops.txt</span>
-<span class="co">#&gt;   [5]               3.599903   4.59845  1.451103   7.10069 WT_5kbLoops.txt</span>
-<span class="co">#&gt;   [6]               2.712936   3.42938  0.834681   4.94759 WT_5kbLoops.txt</span>
-<span class="co">#&gt;         cluster</span>
-<span class="co">#&gt;       &lt;integer&gt;</span>
-<span class="co">#&gt;   [1]         0</span>
-<span class="co">#&gt;   [2]         0</span>
-<span class="co">#&gt;   [3]       167</span>
-<span class="co">#&gt;   [4]         0</span>
-<span class="co">#&gt;   [5]         0</span>
-<span class="co">#&gt;   [6]         0</span>
-<span class="co">#&gt;   -------</span>
-<span class="co">#&gt;   regions: 22952 ranges and 0 metadata columns</span>
-<span class="co">#&gt;   seqinfo: 23 sequences from an unspecified genome; no seqlengths</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Load packages</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">hictoolsr</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mhahsler/dbscan" class="external-link">dbscan</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Define WT and FS loop file paths</span></span>
+<span><span class="va">wt_loops</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/WT_5kbLoops.txt"</span>, package <span class="op">=</span> <span class="st">"hictoolsr"</span><span class="op">)</span></span>
+<span><span class="va">fs_loops</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/FS_5kbLoops.txt"</span>, package <span class="op">=</span> <span class="st">"hictoolsr"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Merge loops and convert to GInteractions</span></span>
+<span><span class="va">loops</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="../reference/mergeBedpe.html">mergeBedpe</a></span><span class="op">(</span>bedpeFiles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">wt_loops</span>, <span class="va">fs_loops</span><span class="op">)</span>, res <span class="op">=</span> <span class="fl">10e3</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/makeGInteractionsFromDataFrame.html">as_ginteractions</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">loops</span><span class="op">)</span></span>
+<span><span class="co">#&gt; GInteractions object with 6 interactions and 11 metadata columns:</span></span>
+<span><span class="co">#&gt;       seqnames1         ranges1     seqnames2         ranges2 |       color</span></span>
+<span><span class="co">#&gt;           &lt;Rle&gt;       &lt;IRanges&gt;         &lt;Rle&gt;       &lt;IRanges&gt; | &lt;character&gt;</span></span>
+<span><span class="co">#&gt;   [1]      chr1   950000-960000 ---      chr1  990000-1000000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [2]      chr1 2070000-2080000 ---      chr1 2100000-2110000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [3]      chr1 2120000-2130000 ---      chr1 2310000-2320000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [4]      chr1 2260000-2270000 ---      chr1 2290000-2300000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [5]      chr1 2340000-2350000 ---      chr1 3340000-3350000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [6]      chr1 2340000-2350000 ---      chr1 2470000-2480000 |       0,0,0</span></span>
+<span><span class="co">#&gt;       APScoreAvg ProbabilityofEnrichment RegAPScoreAvg Avg_diffMaxNeihgboor_1</span></span>
+<span><span class="co">#&gt;        &lt;numeric&gt;               &lt;numeric&gt;     &lt;numeric&gt;              &lt;numeric&gt;</span></span>
+<span><span class="co">#&gt;   [1]    1.94235                0.955674       1.44411               0.589269</span></span>
+<span><span class="co">#&gt;   [2]    2.22286                0.948697       1.33797               1.119236</span></span>
+<span><span class="co">#&gt;   [3]    4.83488                0.997847       2.97869               1.586035</span></span>
+<span><span class="co">#&gt;   [4]    1.73253                0.909439       1.44687               0.330902</span></span>
+<span><span class="co">#&gt;   [5]    3.99551                0.999175       2.19222               2.815012</span></span>
+<span><span class="co">#&gt;   [6]    4.23943                0.992896       2.28334               1.707992</span></span>
+<span><span class="co">#&gt;       Avg_diffMaxNeihgboor_2       avg       std     value          source</span></span>
+<span><span class="co">#&gt;                    &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;     &lt;character&gt;</span></span>
+<span><span class="co">#&gt;   [1]               0.954486   2.59272  0.304534   3.11651 FS_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [2]               1.287945   1.97545  0.448767   2.97032 FS_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [3]               2.891005   4.73156  0.728192   6.14136 WT_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [4]               0.453355   2.10784  0.226152   2.40198 FS_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [5]               3.599903   4.59845  1.451103   7.10069 WT_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [6]               2.712936   3.42938  0.834681   4.94759 WT_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;         cluster</span></span>
+<span><span class="co">#&gt;       &lt;integer&gt;</span></span>
+<span><span class="co">#&gt;   [1]         0</span></span>
+<span><span class="co">#&gt;   [2]         0</span></span>
+<span><span class="co">#&gt;   [3]       167</span></span>
+<span><span class="co">#&gt;   [4]         0</span></span>
+<span><span class="co">#&gt;   [5]         0</span></span>
+<span><span class="co">#&gt;   [6]         0</span></span>
+<span><span class="co">#&gt;   -------</span></span>
+<span><span class="co">#&gt;   regions: 22952 ranges and 0 metadata columns</span></span>
+<span><span class="co">#&gt;   seqinfo: 23 sequences from an unspecified genome; no seqlengths</span></span></code></pre></div>
 </div>
-<div id="extracting-hi-c-counts" class="section level2">
-<h2 class="hasAnchor">
-<a href="#extracting-hi-c-counts" class="anchor"></a>Extracting Hi-C counts</h2>
+<div class="section level2">
+<h2 id="extracting-hi-c-counts">Extracting Hi-C counts<a class="anchor" aria-label="anchor" href="#extracting-hi-c-counts"></a>
+</h2>
 <p><code>DESeq2</code> requires a counts table from replicate <code>.hic</code> files to call differential loops. The code below shows how to extract these counts remotely using the GEO links to each replicate <code>.hic</code> file. Alternatively, these files can be downloaded and the paths to each file can be supplied (recommended due to internet instability).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Hi-C file paths from GEO</span>
-<span class="va">hicFiles</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259896/suppl/GSM4259896_HEK_HiC_NUP_IDR_WT_A9_1_1_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259897/suppl/GSM4259897_HEK_HiC_NUP_IDR_WT_A9_1_2_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259898/suppl/GSM4259898_HEK_HiC_NUP_IDR_WT_A9_2_1_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259899/suppl/GSM4259899_HEK_HiC_NUP_IDR_WT_A9_2_2_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259900/suppl/GSM4259900_HEK_HiC_NUP_IDR_FS_A9_1_1_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259901/suppl/GSM4259901_HEK_HiC_NUP_IDR_FS_A9_1_2_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259902/suppl/GSM4259902_HEK_HiC_NUP_IDR_FS_A9_2_1_inter_30.hic"</span>,
-    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259903/suppl/GSM4259903_HEK_HiC_NUP_IDR_FS_A9_2_2_inter_30.hic"</span><span class="op">)</span>
-
-<span class="co">## Extract Hi-C counts between loop pixels</span>
-<span class="va">loopCounts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extractCounts.html">extractCounts</a></span><span class="op">(</span>bedpe <span class="op">=</span> <span class="va">loops</span>,
-              hic <span class="op">=</span> <span class="va">hicFiles</span>,
-              chroms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">22</span>, <span class="st">"X"</span><span class="op">)</span>,
-              res <span class="op">=</span> <span class="fl">10e3</span>,
-              norm <span class="op">=</span> <span class="st">'NONE'</span>,
-              matrix <span class="op">=</span> <span class="st">'observed'</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Hi-C file paths from GEO</span></span>
+<span><span class="va">hicFiles</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259896/suppl/GSM4259896_HEK_HiC_NUP_IDR_WT_A9_1_1_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259897/suppl/GSM4259897_HEK_HiC_NUP_IDR_WT_A9_1_2_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259898/suppl/GSM4259898_HEK_HiC_NUP_IDR_WT_A9_2_1_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259899/suppl/GSM4259899_HEK_HiC_NUP_IDR_WT_A9_2_2_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259900/suppl/GSM4259900_HEK_HiC_NUP_IDR_FS_A9_1_1_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259901/suppl/GSM4259901_HEK_HiC_NUP_IDR_FS_A9_1_2_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259902/suppl/GSM4259902_HEK_HiC_NUP_IDR_FS_A9_2_1_inter_30.hic"</span>,</span>
+<span>    <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4259nnn/GSM4259903/suppl/GSM4259903_HEK_HiC_NUP_IDR_FS_A9_2_2_inter_30.hic"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Extract Hi-C counts between loop pixels</span></span>
+<span><span class="va">loopCounts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extractCounts.html">extractCounts</a></span><span class="op">(</span>bedpe <span class="op">=</span> <span class="va">loops</span>,</span>
+<span>              hic <span class="op">=</span> <span class="va">hicFiles</span>,</span>
+<span>              chroms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">22</span>, <span class="st">"X"</span><span class="op">)</span>,</span>
+<span>              res <span class="op">=</span> <span class="fl">10e3</span>,</span>
+<span>              norm <span class="op">=</span> <span class="st">'NONE'</span>,</span>
+<span>              matrix <span class="op">=</span> <span class="st">'observed'</span><span class="op">)</span></span></code></pre></div>
 <p>Since extracting counts can take some time, an example dataset has been packaged with pre-extracted counts for the code shown above.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"loopCounts"</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"loopCounts"</span><span class="op">)</span></span></code></pre></div>
 <p>Extract counts takes the basename of the filepath that is supplied as the column. Lets simplify the column names:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Load package</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">InteractionSet</span><span class="op">)</span>
-
-<span class="co">## Simplify column names</span>
-<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="fu">mcols</span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/grep.html">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"GSM.*_IDR_(WT|FS)_A9_(1|2)_(1|2)_.*"</span>, 
-       replacement <span class="op">=</span> <span class="st">"\\1_\\2_\\3"</span>,
-       x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="fu">mcols</span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span>
-<span class="co">#&gt; GInteractions object with 6 interactions and 19 metadata columns:</span>
-<span class="co">#&gt;       seqnames1         ranges1     seqnames2         ranges2 |       color</span>
-<span class="co">#&gt;           &lt;Rle&gt;       &lt;IRanges&gt;         &lt;Rle&gt;       &lt;IRanges&gt; | &lt;character&gt;</span>
-<span class="co">#&gt;   [1]      chr1   950000-960000 ---      chr1  990000-1000000 |       0,0,0</span>
-<span class="co">#&gt;   [2]      chr1 2070000-2080000 ---      chr1 2100000-2110000 |       0,0,0</span>
-<span class="co">#&gt;   [3]      chr1 2120000-2130000 ---      chr1 2310000-2320000 |       0,0,0</span>
-<span class="co">#&gt;   [4]      chr1 2260000-2270000 ---      chr1 2290000-2300000 |       0,0,0</span>
-<span class="co">#&gt;   [5]      chr1 2340000-2350000 ---      chr1 3340000-3350000 |       0,0,0</span>
-<span class="co">#&gt;   [6]      chr1 2340000-2350000 ---      chr1 2470000-2480000 |       0,0,0</span>
-<span class="co">#&gt;       APScoreAvg ProbabilityofEnrichment RegAPScoreAvg Avg_diffMaxNeihgboor_1</span>
-<span class="co">#&gt;        &lt;numeric&gt;               &lt;numeric&gt;     &lt;numeric&gt;              &lt;numeric&gt;</span>
-<span class="co">#&gt;   [1]    1.94235                0.955674       1.44411               0.589269</span>
-<span class="co">#&gt;   [2]    2.22286                0.948697       1.33797               1.119236</span>
-<span class="co">#&gt;   [3]    4.83488                0.997847       2.97869               1.586035</span>
-<span class="co">#&gt;   [4]    1.73253                0.909439       1.44687               0.330902</span>
-<span class="co">#&gt;   [5]    3.99551                0.999175       2.19222               2.815012</span>
-<span class="co">#&gt;   [6]    4.23943                0.992896       2.28334               1.707992</span>
-<span class="co">#&gt;       Avg_diffMaxNeihgboor_2       avg       std     value          source</span>
-<span class="co">#&gt;                    &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;     &lt;character&gt;</span>
-<span class="co">#&gt;   [1]               0.954486   2.59272  0.304534   3.11651 FS_5kbLoops.txt</span>
-<span class="co">#&gt;   [2]               1.287945   1.97545  0.448767   2.97032 FS_5kbLoops.txt</span>
-<span class="co">#&gt;   [3]               2.891005   4.73156  0.728192   6.14136 WT_5kbLoops.txt</span>
-<span class="co">#&gt;   [4]               0.453355   2.10784  0.226152   2.40198 FS_5kbLoops.txt</span>
-<span class="co">#&gt;   [5]               3.599903   4.59845  1.451103   7.10069 WT_5kbLoops.txt</span>
-<span class="co">#&gt;   [6]               2.712936   3.42938  0.834681   4.94759 WT_5kbLoops.txt</span>
-<span class="co">#&gt;         cluster    WT_1_1    WT_1_2    WT_2_1    WT_2_2    FS_1_1    FS_1_2</span>
-<span class="co">#&gt;       &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="co">#&gt;   [1]         0        63        56        38        58        55        65</span>
-<span class="co">#&gt;   [2]         0        56        59        33        45        50        60</span>
-<span class="co">#&gt;   [3]       167        37        35        29        39        34        25</span>
-<span class="co">#&gt;   [4]         0        27        40        49        40        49        52</span>
-<span class="co">#&gt;   [5]         0        15        13        15        14         4         5</span>
-<span class="co">#&gt;   [6]         0        25        34        34        35        25        32</span>
-<span class="co">#&gt;          FS_2_1    FS_2_2</span>
-<span class="co">#&gt;       &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="co">#&gt;   [1]        57        66</span>
-<span class="co">#&gt;   [2]        49        72</span>
-<span class="co">#&gt;   [3]        30        43</span>
-<span class="co">#&gt;   [4]        50        56</span>
-<span class="co">#&gt;   [5]         6         3</span>
-<span class="co">#&gt;   [6]        29        36</span>
-<span class="co">#&gt;   -------</span>
-<span class="co">#&gt;   regions: 22952 ranges and 0 metadata columns</span>
-<span class="co">#&gt;   seqinfo: 23 sequences from an unspecified genome; no seqlengths</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Load package</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">InteractionSet</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Simplify column names</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">mcols</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">"GSM.*_IDR_(WT|FS)_A9_(1|2)_(1|2)_.*"</span>, </span>
+<span>       replacement <span class="op">=</span> <span class="st">"\\1_\\2_\\3"</span>,</span>
+<span>       x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">mcols</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; GInteractions object with 6 interactions and 19 metadata columns:</span></span>
+<span><span class="co">#&gt;       seqnames1         ranges1     seqnames2         ranges2 |       color</span></span>
+<span><span class="co">#&gt;           &lt;Rle&gt;       &lt;IRanges&gt;         &lt;Rle&gt;       &lt;IRanges&gt; | &lt;character&gt;</span></span>
+<span><span class="co">#&gt;   [1]      chr1   950000-960000 ---      chr1  990000-1000000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [2]      chr1 2070000-2080000 ---      chr1 2100000-2110000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [3]      chr1 2120000-2130000 ---      chr1 2310000-2320000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [4]      chr1 2260000-2270000 ---      chr1 2290000-2300000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [5]      chr1 2340000-2350000 ---      chr1 3340000-3350000 |       0,0,0</span></span>
+<span><span class="co">#&gt;   [6]      chr1 2340000-2350000 ---      chr1 2470000-2480000 |       0,0,0</span></span>
+<span><span class="co">#&gt;       APScoreAvg ProbabilityofEnrichment RegAPScoreAvg Avg_diffMaxNeihgboor_1</span></span>
+<span><span class="co">#&gt;        &lt;numeric&gt;               &lt;numeric&gt;     &lt;numeric&gt;              &lt;numeric&gt;</span></span>
+<span><span class="co">#&gt;   [1]    1.94235                0.955674       1.44411               0.589269</span></span>
+<span><span class="co">#&gt;   [2]    2.22286                0.948697       1.33797               1.119236</span></span>
+<span><span class="co">#&gt;   [3]    4.83488                0.997847       2.97869               1.586035</span></span>
+<span><span class="co">#&gt;   [4]    1.73253                0.909439       1.44687               0.330902</span></span>
+<span><span class="co">#&gt;   [5]    3.99551                0.999175       2.19222               2.815012</span></span>
+<span><span class="co">#&gt;   [6]    4.23943                0.992896       2.28334               1.707992</span></span>
+<span><span class="co">#&gt;       Avg_diffMaxNeihgboor_2       avg       std     value          source</span></span>
+<span><span class="co">#&gt;                    &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;     &lt;character&gt;</span></span>
+<span><span class="co">#&gt;   [1]               0.954486   2.59272  0.304534   3.11651 FS_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [2]               1.287945   1.97545  0.448767   2.97032 FS_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [3]               2.891005   4.73156  0.728192   6.14136 WT_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [4]               0.453355   2.10784  0.226152   2.40198 FS_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [5]               3.599903   4.59845  1.451103   7.10069 WT_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;   [6]               2.712936   3.42938  0.834681   4.94759 WT_5kbLoops.txt</span></span>
+<span><span class="co">#&gt;         cluster    WT_1_1    WT_1_2    WT_2_1    WT_2_2    FS_1_1    FS_1_2</span></span>
+<span><span class="co">#&gt;       &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span></span>
+<span><span class="co">#&gt;   [1]         0        63        56        38        58        55        65</span></span>
+<span><span class="co">#&gt;   [2]         0        56        59        33        45        50        60</span></span>
+<span><span class="co">#&gt;   [3]       167        37        35        29        39        34        25</span></span>
+<span><span class="co">#&gt;   [4]         0        27        40        49        40        49        52</span></span>
+<span><span class="co">#&gt;   [5]         0        15        13        15        14         4         5</span></span>
+<span><span class="co">#&gt;   [6]         0        25        34        34        35        25        32</span></span>
+<span><span class="co">#&gt;          FS_2_1    FS_2_2</span></span>
+<span><span class="co">#&gt;       &lt;numeric&gt; &lt;numeric&gt;</span></span>
+<span><span class="co">#&gt;   [1]        57        66</span></span>
+<span><span class="co">#&gt;   [2]        49        72</span></span>
+<span><span class="co">#&gt;   [3]        30        43</span></span>
+<span><span class="co">#&gt;   [4]        50        56</span></span>
+<span><span class="co">#&gt;   [5]         6         3</span></span>
+<span><span class="co">#&gt;   [6]        29        36</span></span>
+<span><span class="co">#&gt;   -------</span></span>
+<span><span class="co">#&gt;   regions: 22952 ranges and 0 metadata columns</span></span>
+<span><span class="co">#&gt;   seqinfo: 23 sequences from an unspecified genome; no seqlengths</span></span></code></pre></div>
 </div>
-<div id="differential-loop-calling" class="section level2">
-<h2 class="hasAnchor">
-<a href="#differential-loop-calling" class="anchor"></a>Differential loop calling</h2>
+<div class="section level2">
+<h2 id="differential-loop-calling">Differential loop calling<a class="anchor" aria-label="anchor" href="#differential-loop-calling"></a>
+</h2>
 <p>The following code demonstrates how to call differential loops with <code>DESeq2</code> using the <code>loopCounts</code> object created above. First we isolate the count matrix from loop counts:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Load package</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mikelove/DESeq2">DESeq2</a></span><span class="op">)</span>
-
-<span class="co">## Isolate count matrix</span>
-<span class="va">cnts</span> <span class="op">&lt;-</span> 
-  <span class="fu">mcols</span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html">grep</a></span><span class="op">(</span><span class="st">"WT|FS"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="fu">mcols</span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">cnts</span><span class="op">)</span>
-<span class="co">#&gt;      WT_1_1 WT_1_2 WT_2_1 WT_2_2 FS_1_1 FS_1_2 FS_2_1 FS_2_2</span>
-<span class="co">#&gt; [1,]     63     56     38     58     55     65     57     66</span>
-<span class="co">#&gt; [2,]     56     59     33     45     50     60     49     72</span>
-<span class="co">#&gt; [3,]     37     35     29     39     34     25     30     43</span>
-<span class="co">#&gt; [4,]     27     40     49     40     49     52     50     56</span>
-<span class="co">#&gt; [5,]     15     13     15     14      4      5      6      3</span>
-<span class="co">#&gt; [6,]     25     34     34     35     25     32     29     36</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Load package</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mikelove/DESeq2" class="external-link">DESeq2</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Isolate count matrix</span></span>
+<span><span class="va">cnts</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">mcols</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/grep.html" class="external-link">grep</a></span><span class="op">(</span><span class="st">"WT|FS"</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">mcols</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cnts</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      WT_1_1 WT_1_2 WT_2_1 WT_2_2 FS_1_1 FS_1_2 FS_2_1 FS_2_2</span></span>
+<span><span class="co">#&gt; [1,]     63     56     38     58     55     65     57     66</span></span>
+<span><span class="co">#&gt; [2,]     56     59     33     45     50     60     49     72</span></span>
+<span><span class="co">#&gt; [3,]     37     35     29     39     34     25     30     43</span></span>
+<span><span class="co">#&gt; [4,]     27     40     49     40     49     52     50     56</span></span>
+<span><span class="co">#&gt; [5,]     15     13     15     14      4      5      6      3</span></span>
+<span><span class="co">#&gt; [6,]     25     34     34     35     25     32     29     36</span></span></code></pre></div>
 <p>Then we create column data using the column names from the counts matrix:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Create colData from column names</span>
-<span class="va">colData</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html">strsplit</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">cnts</span><span class="op">)</span>, split <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span><span class="op">)</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span>stringsAsFactors <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> |&gt;
-  <span class="fu">`colnames&lt;-`</span><span class="op">(</span>value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"condition"</span>, <span class="st">"biorep"</span>, <span class="st">"techrep"</span><span class="op">)</span><span class="op">)</span>
-
-<span class="va">colData</span>
-<span class="co">#&gt;   condition biorep techrep</span>
-<span class="co">#&gt; 1        WT      1       1</span>
-<span class="co">#&gt; 2        WT      1       2</span>
-<span class="co">#&gt; 3        WT      2       1</span>
-<span class="co">#&gt; 4        WT      2       2</span>
-<span class="co">#&gt; 5        FS      1       1</span>
-<span class="co">#&gt; 6        FS      1       2</span>
-<span class="co">#&gt; 7        FS      2       1</span>
-<span class="co">#&gt; 8        FS      2       2</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Create colData from column names</span></span>
+<span><span class="va">colData</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">cnts</span><span class="op">)</span>, split <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span>stringsAsFactors <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">`colnames&lt;-`</span><span class="op">(</span>value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"condition"</span>, <span class="st">"biorep"</span>, <span class="st">"techrep"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">colData</span></span>
+<span><span class="co">#&gt;   condition biorep techrep</span></span>
+<span><span class="co">#&gt; 1        WT      1       1</span></span>
+<span><span class="co">#&gt; 2        WT      1       2</span></span>
+<span><span class="co">#&gt; 3        WT      2       1</span></span>
+<span><span class="co">#&gt; 4        WT      2       2</span></span>
+<span><span class="co">#&gt; 5        FS      1       1</span></span>
+<span><span class="co">#&gt; 6        FS      1       2</span></span>
+<span><span class="co">#&gt; 7        FS      2       1</span></span>
+<span><span class="co">#&gt; 8        FS      2       2</span></span></code></pre></div>
 <p>Next we can build a DESeq data set and compare differential loops between the “WT” and “FS” conditions:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Build DESeq data set</span>
-<span class="va">dds</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/DESeqDataSet.html">DESeqDataSetFromMatrix</a></span><span class="op">(</span>countData <span class="op">=</span> <span class="va">cnts</span>,
-                         colData <span class="op">=</span> <span class="va">colData</span>,
-                         design <span class="op">=</span> <span class="op">~</span><span class="va">techrep</span> <span class="op">+</span> <span class="va">biorep</span> <span class="op">+</span> <span class="va">condition</span><span class="op">)</span>
-<span class="co">#&gt; converting counts to integer mode</span>
-
-<span class="co">## Run DEseq analysis</span>
-<span class="va">res</span> <span class="op">&lt;-</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/DESeq.html">DESeq</a></span><span class="op">(</span><span class="va">dds</span><span class="op">)</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/lfcShrink.html">lfcShrink</a></span><span class="op">(</span>coef <span class="op">=</span> <span class="st">"condition_WT_vs_FS"</span>, type<span class="op">=</span><span class="st">"apeglm"</span><span class="op">)</span>
-<span class="co">#&gt; estimating size factors</span>
-<span class="co">#&gt; estimating dispersions</span>
-<span class="co">#&gt; gene-wise dispersion estimates</span>
-<span class="co">#&gt; mean-dispersion relationship</span>
-<span class="co">#&gt; final dispersion estimates</span>
-<span class="co">#&gt; fitting model and testing</span>
-<span class="co">#&gt; using 'apeglm' for LFC shrinkage. If used in published research, please cite:</span>
-<span class="co">#&gt;     Zhu, A., Ibrahim, J.G., Love, M.I. (2018) Heavy-tailed prior distributions for</span>
-<span class="co">#&gt;     sequence count data: removing the noise and preserving large differences.</span>
-<span class="co">#&gt;     Bioinformatics. https://doi.org/10.1093/bioinformatics/bty895</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>  
-<span class="co">#&gt; </span>
-<span class="co">#&gt; out of 15479 with nonzero total read count</span>
-<span class="co">#&gt; adjusted p-value &lt; 0.1</span>
-<span class="co">#&gt; LFC &gt; 0 (up)       : 489, 3.2%</span>
-<span class="co">#&gt; LFC &lt; 0 (down)     : 224, 1.4%</span>
-<span class="co">#&gt; outliers [1]       : 0, 0%</span>
-<span class="co">#&gt; low counts [2]     : 0, 0%</span>
-<span class="co">#&gt; (mean count &lt; 1)</span>
-<span class="co">#&gt; [1] see 'cooksCutoff' argument of ?results</span>
-<span class="co">#&gt; [2] see 'independentFiltering' argument of ?results</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Build DESeq data set</span></span>
+<span><span class="va">dds</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/DESeqDataSet.html" class="external-link">DESeqDataSetFromMatrix</a></span><span class="op">(</span>countData <span class="op">=</span> <span class="va">cnts</span>,</span>
+<span>                         colData <span class="op">=</span> <span class="va">colData</span>,</span>
+<span>                         design <span class="op">=</span> <span class="op">~</span><span class="va">techrep</span> <span class="op">+</span> <span class="va">biorep</span> <span class="op">+</span> <span class="va">condition</span><span class="op">)</span></span>
+<span><span class="co">#&gt; converting counts to integer mode</span></span>
+<span></span>
+<span><span class="co">## Run DEseq analysis</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/DESeq.html" class="external-link">DESeq</a></span><span class="op">(</span><span class="va">dds</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/lfcShrink.html" class="external-link">lfcShrink</a></span><span class="op">(</span>coef <span class="op">=</span> <span class="st">"condition_WT_vs_FS"</span>, type<span class="op">=</span><span class="st">"apeglm"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; estimating size factors</span></span>
+<span><span class="co">#&gt; estimating dispersions</span></span>
+<span><span class="co">#&gt; gene-wise dispersion estimates</span></span>
+<span><span class="co">#&gt; mean-dispersion relationship</span></span>
+<span><span class="co">#&gt; final dispersion estimates</span></span>
+<span><span class="co">#&gt; fitting model and testing</span></span>
+<span><span class="co">#&gt; using 'apeglm' for LFC shrinkage. If used in published research, please cite:</span></span>
+<span><span class="co">#&gt;     Zhu, A., Ibrahim, J.G., Love, M.I. (2018) Heavy-tailed prior distributions for</span></span>
+<span><span class="co">#&gt;     sequence count data: removing the noise and preserving large differences.</span></span>
+<span><span class="co">#&gt;     Bioinformatics. https://doi.org/10.1093/bioinformatics/bty895</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>  </span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; out of 15479 with nonzero total read count</span></span>
+<span><span class="co">#&gt; adjusted p-value &lt; 0.1</span></span>
+<span><span class="co">#&gt; LFC &gt; 0 (up)       : 489, 3.2%</span></span>
+<span><span class="co">#&gt; LFC &lt; 0 (down)     : 224, 1.4%</span></span>
+<span><span class="co">#&gt; outliers [1]       : 0, 0%</span></span>
+<span><span class="co">#&gt; low counts [2]     : 0, 0%</span></span>
+<span><span class="co">#&gt; (mean count &lt; 1)</span></span>
+<span><span class="co">#&gt; [1] see 'cooksCutoff' argument of ?results</span></span>
+<span><span class="co">#&gt; [2] see 'independentFiltering' argument of ?results</span></span></code></pre></div>
 <p>We can explore the differential results with an MA-plot:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/plotMA.html">plotMA</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/plotMA.html" class="external-link">plotMA</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;"></p>
 <p>or a PCA plot:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/plotPCA.html">plotPCA</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/vst.html">vst</a></span><span class="op">(</span><span class="va">dds</span><span class="op">)</span>, intgroup <span class="op">=</span> <span class="st">"condition"</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/plotPCA.html" class="external-link">plotPCA</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/DESeq2/man/vst.html" class="external-link">vst</a></span><span class="op">(</span><span class="va">dds</span><span class="op">)</span>, intgroup <span class="op">=</span> <span class="st">"condition"</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;"></p>
 <p>Let’s add the differential output from DESeq2 back to our <code>loopCounts</code> object, then separate WT-specific and FS-specific loops use a BH-adjusted pvalue of 0.01 and log2FoldChange above or below 0:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Attach DESeq2 results</span>
-<span class="fu">mcols</span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="fu">mcols</span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span>, <span class="va">res</span><span class="op">)</span>
-
-<span class="co">## Separate WT/FS-specific loops</span>
-<span class="va">wtLoops</span> <span class="op">&lt;-</span> <span class="va">loopCounts</span><span class="op">[</span><span class="va">loopCounts</span><span class="op">$</span><span class="va">padj</span> <span class="op">&lt;=</span> <span class="fl">0.01</span> <span class="op">&amp;</span>
-                         <span class="va">loopCounts</span><span class="op">$</span><span class="va">log2FoldChange</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">]</span>
-
-<span class="va">fsLoops</span> <span class="op">&lt;-</span> <span class="va">loopCounts</span><span class="op">[</span><span class="va">loopCounts</span><span class="op">$</span><span class="va">padj</span> <span class="op">&lt;=</span> <span class="fl">0.01</span> <span class="op">&amp;</span>
-                         <span class="va">loopCounts</span><span class="op">$</span><span class="va">log2FoldChange</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">wtLoops</span><span class="op">)</span>
-<span class="co">#&gt; [1] "GInteractions object of length 214 with 24 metadata columns"</span>
-<span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fsLoops</span><span class="op">)</span>
-<span class="co">#&gt; [1] "GInteractions object of length 47 with 24 metadata columns"</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Attach DESeq2 results</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">mcols</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">mcols</a></span><span class="op">(</span><span class="va">loopCounts</span><span class="op">)</span>, <span class="va">res</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Separate WT/FS-specific loops</span></span>
+<span><span class="va">wtLoops</span> <span class="op">&lt;-</span> <span class="va">loopCounts</span><span class="op">[</span><span class="va">loopCounts</span><span class="op">$</span><span class="va">padj</span> <span class="op">&lt;=</span> <span class="fl">0.01</span> <span class="op">&amp;</span></span>
+<span>                         <span class="va">loopCounts</span><span class="op">$</span><span class="va">log2FoldChange</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">fsLoops</span> <span class="op">&lt;-</span> <span class="va">loopCounts</span><span class="op">[</span><span class="va">loopCounts</span><span class="op">$</span><span class="va">padj</span> <span class="op">&lt;=</span> <span class="fl">0.01</span> <span class="op">&amp;</span></span>
+<span>                         <span class="va">loopCounts</span><span class="op">$</span><span class="va">log2FoldChange</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">wtLoops</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "GInteractions object of length 214 with 24 metadata columns"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fsLoops</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "GInteractions object of length 47 with 24 metadata columns"</span></span></code></pre></div>
 </div>
-<div id="visualizing-with-aggregate-peak-analysis" class="section level2">
-<h2 class="hasAnchor">
-<a href="#visualizing-with-aggregate-peak-analysis" class="anchor"></a>Visualizing with Aggregate Peak Analysis</h2>
+<div class="section level2">
+<h2 id="visualizing-with-aggregate-peak-analysis">Visualizing with Aggregate Peak Analysis<a class="anchor" aria-label="anchor" href="#visualizing-with-aggregate-peak-analysis"></a>
+</h2>
 <p>Now that we have identified differential loops between “WT” and “FS” conditions we can perform an aggregate (or average) peak analysis (APA) to visualize the quality of loop calls. APAs are pileup plots of contact frequency matrices from Hi-C data surrounding the central loop pixels.</p>
-<div id="calculating-apas" class="section level3">
-<h3 class="hasAnchor">
-<a href="#calculating-apas" class="anchor"></a>Calculating APAs</h3>
+<div class="section level3">
+<h3 id="calculating-apas">Calculating APAs<a class="anchor" aria-label="anchor" href="#calculating-apas"></a>
+</h3>
 <p>APAs extract and aggregate matrices around a Hi-C pixel at a given resolution (<code>res</code>) and number of pixels in either direction (<code>buffer</code>). For example, if you want to extract a 21x21 matrix at 10-kb resolution you should set <code>res = 10e3</code> and <code>buffer = 10</code>. “Short” interactions that are too close to the diagonal must be filtered out to avoid aggregation errors. The <code><a href="../reference/filterBedpe.html">filterBedpe()</a></code> function calculates which interactions would intersect the diagonal and filters them out. In the code below, we assemble our loop categories into a list and apply this filtering for a resolution of 10-kb and a buffer of 10:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Assemble all, WT, and FS loops into a list</span>
-<span class="va">loopList</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>allLoops <span class="op">=</span> <span class="va">loopCounts</span>,
-       wtLoops <span class="op">=</span> <span class="va">wtLoops</span>,
-       fsLoops <span class="op">=</span> <span class="va">fsLoops</span><span class="op">)</span>
-
-<span class="co">## Define resolution and buffer (pixels from center)</span>
-<span class="va">res</span> <span class="op">&lt;-</span> <span class="fl">10e3</span>
-<span class="va">buffer</span> <span class="op">&lt;-</span> <span class="fl">10</span>
-
-<span class="co">## Filter out short loop interactions</span>
-<span class="va">filteredLoops</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">loopList</span>,
-         FUN <span class="op">=</span> <span class="va">filterBedpe</span>,
-         res <span class="op">=</span> <span class="va">res</span>,
-         buffer <span class="op">=</span> <span class="va">buffer</span><span class="op">)</span> |&gt;
-  <span class="fu">`names&lt;-`</span><span class="op">(</span>value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">loopList</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">filteredLoops</span>, <span class="va">summary</span><span class="op">)</span>
-<span class="co">#&gt; $allLoops</span>
-<span class="co">#&gt; [1] "GInteractions object of length 10530 with 24 metadata columns"</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; $wtLoops</span>
-<span class="co">#&gt; [1] "GInteractions object of length 110 with 24 metadata columns"</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; $fsLoops</span>
-<span class="co">#&gt; [1] "GInteractions object of length 13 with 24 metadata columns"</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Assemble all, WT, and FS loops into a list</span></span>
+<span><span class="va">loopList</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>allLoops <span class="op">=</span> <span class="va">loopCounts</span>,</span>
+<span>       wtLoops <span class="op">=</span> <span class="va">wtLoops</span>,</span>
+<span>       fsLoops <span class="op">=</span> <span class="va">fsLoops</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Define resolution and buffer (pixels from center)</span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fl">10e3</span></span>
+<span><span class="va">buffer</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span></span>
+<span><span class="co">## Filter out short loop interactions</span></span>
+<span><span class="va">filteredLoops</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">loopList</span>,</span>
+<span>         FUN <span class="op">=</span> <span class="va">filterBedpe</span>,</span>
+<span>         res <span class="op">=</span> <span class="va">res</span>,</span>
+<span>         buffer <span class="op">=</span> <span class="va">buffer</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">`names&lt;-`</span><span class="op">(</span>value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">loopList</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">filteredLoops</span>, <span class="va">summary</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $allLoops</span></span>
+<span><span class="co">#&gt; [1] "GInteractions object of length 10530 with 24 metadata columns"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $wtLoops</span></span>
+<span><span class="co">#&gt; [1] "GInteractions object of length 110 with 24 metadata columns"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $fsLoops</span></span>
+<span><span class="co">#&gt; [1] "GInteractions object of length 13 with 24 metadata columns"</span></span></code></pre></div>
 <p>You will notice that many of these interactions are close to the diagonal and are filtered out. The next block of code demonstrates how to apply the <code><a href="../reference/calcApa.html">calcApa()</a></code> function to the list of filtered loops to extract and aggregate counts from the replicate-merged Hi-C files of the “WT” and “FS” conditions:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Hi-C file paths from GEO</span>
-<span class="va">wtHicPath</span> <span class="op">&lt;-</span> <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE143nnn/GSE143465/suppl/GSE143465_HEK_HiC_NUP_IDR_WT_A9_megaMap_inter_30.hic"</span>
-<span class="va">fsHicPath</span> <span class="op">&lt;-</span> <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE143nnn/GSE143465/suppl/GSE143465_HEK_HiC_NUP_IDR_FS_A9_megaMap_inter_30.hic"</span>
-
-<span class="co">## Calculate APA matrices for loops from WT Hi-C data</span>
-<span class="va">loopApaWtHic</span> <span class="op">&lt;-</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">filteredLoops</span>,
-         FUN <span class="op">=</span> <span class="va">calcApa</span>,
-         hic <span class="op">=</span> <span class="va">wtHicPath</span>,
-         norm <span class="op">=</span> <span class="st">"KR"</span>,
-         buffer <span class="op">=</span> <span class="va">buffer</span><span class="op">)</span>
-
-<span class="co">## Calculate APA matrices for loops from FS Hi-C data</span>
-<span class="va">loopApaFsHic</span> <span class="op">&lt;-</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">filteredLoops</span>,
-         FUN <span class="op">=</span> <span class="va">calcApa</span>,
-         hic <span class="op">=</span> <span class="va">fsHicPath</span>,
-         norm <span class="op">=</span> <span class="st">"KR"</span>,
-         buffer <span class="op">=</span> <span class="va">buffer</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Hi-C file paths from GEO</span></span>
+<span><span class="va">wtHicPath</span> <span class="op">&lt;-</span> <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE143nnn/GSE143465/suppl/GSE143465_HEK_HiC_NUP_IDR_WT_A9_megaMap_inter_30.hic"</span></span>
+<span><span class="va">fsHicPath</span> <span class="op">&lt;-</span> <span class="st">"https://ftp.ncbi.nlm.nih.gov/geo/series/GSE143nnn/GSE143465/suppl/GSE143465_HEK_HiC_NUP_IDR_FS_A9_megaMap_inter_30.hic"</span></span>
+<span></span>
+<span><span class="co">## Calculate APA matrices for loops from WT Hi-C data</span></span>
+<span><span class="va">loopApaWtHic</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">filteredLoops</span>,</span>
+<span>         FUN <span class="op">=</span> <span class="va">calcApa</span>,</span>
+<span>         hic <span class="op">=</span> <span class="va">wtHicPath</span>,</span>
+<span>         norm <span class="op">=</span> <span class="st">"KR"</span>,</span>
+<span>         buffer <span class="op">=</span> <span class="va">buffer</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Calculate APA matrices for loops from FS Hi-C data</span></span>
+<span><span class="va">loopApaFsHic</span> <span class="op">&lt;-</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">filteredLoops</span>,</span>
+<span>         FUN <span class="op">=</span> <span class="va">calcApa</span>,</span>
+<span>         hic <span class="op">=</span> <span class="va">fsHicPath</span>,</span>
+<span>         norm <span class="op">=</span> <span class="st">"KR"</span>,</span>
+<span>         buffer <span class="op">=</span> <span class="va">buffer</span><span class="op">)</span></span></code></pre></div>
 <p>Since calculating the APA matrices can take some time, an example dataset has been packaged with pre-computed APA matrices for the code shown above.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"loopApaWtHic"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"loopApaFsHic"</span><span class="op">)</span>
-
-<span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">dim</span><span class="op">)</span>
-<span class="co">#&gt; $allLoops</span>
-<span class="co">#&gt; [1] 21 21</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; $wtLoops</span>
-<span class="co">#&gt; [1] 21 21</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; $fsLoops</span>
-<span class="co">#&gt; [1] 21 21</span>
-<span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">loopApaFsHic</span>, <span class="va">dim</span><span class="op">)</span>
-<span class="co">#&gt; $allLoops</span>
-<span class="co">#&gt; [1] 21 21</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; $wtLoops</span>
-<span class="co">#&gt; [1] 21 21</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; $fsLoops</span>
-<span class="co">#&gt; [1] 21 21</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"loopApaWtHic"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"loopApaFsHic"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">dim</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $allLoops</span></span>
+<span><span class="co">#&gt; [1] 21 21</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $wtLoops</span></span>
+<span><span class="co">#&gt; [1] 21 21</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $fsLoops</span></span>
+<span><span class="co">#&gt; [1] 21 21</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">loopApaFsHic</span>, <span class="va">dim</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $allLoops</span></span>
+<span><span class="co">#&gt; [1] 21 21</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $wtLoops</span></span>
+<span><span class="co">#&gt; [1] 21 21</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $fsLoops</span></span>
+<span><span class="co">#&gt; [1] 21 21</span></span></code></pre></div>
 <p>The last step before visualizing these matrices is to normalize the summed values to the number of loops in each category so that the interpretation becomes the average signal per loop. This will also put the plots on a similar scale for visualizing together.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Get the number of loops for each condition</span>
-<span class="va">nLoops</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">filteredLoops</span>, <span class="va">length</span><span class="op">)</span>
-
-<span class="co">## Divide each matrix by nLoops</span>
-<span class="va">loopApaWtHic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/funprog.html">Map</a></span><span class="op">(</span><span class="st">"/"</span>, <span class="va">loopApaWtHic</span>, <span class="va">nLoops</span><span class="op">)</span>
-<span class="va">loopApaFsHic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/funprog.html">Map</a></span><span class="op">(</span><span class="st">"/"</span>, <span class="va">loopApaFsHic</span>, <span class="va">nLoops</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Get the number of loops for each condition</span></span>
+<span><span class="va">nLoops</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">filteredLoops</span>, <span class="va">length</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Divide each matrix by nLoops</span></span>
+<span><span class="va">loopApaWtHic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/funprog.html" class="external-link">Map</a></span><span class="op">(</span><span class="st">"/"</span>, <span class="va">loopApaWtHic</span>, <span class="va">nLoops</span><span class="op">)</span></span>
+<span><span class="va">loopApaFsHic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/funprog.html" class="external-link">Map</a></span><span class="op">(</span><span class="st">"/"</span>, <span class="va">loopApaFsHic</span>, <span class="va">nLoops</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div id="visualizing-with-ggplot2" class="section level3">
-<h3 class="hasAnchor">
-<a href="#visualizing-with-ggplot2" class="anchor"></a>Visualizing with <code>ggplot2</code>
+<div class="section level3">
+<h3 id="visualizing-with-ggplot2">Visualizing with <code>ggplot2</code><a class="anchor" aria-label="anchor" href="#visualizing-with-ggplot2"></a>
 </h3>
 <p>To visualize the results in <code>ggplot2</code> we must first convert the matrix to long format.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Convert matrix to long-format</span>
-<span class="va">long</span> <span class="op">&lt;-</span> 
-  <span class="va">loopApaWtHic</span><span class="op">$</span><span class="va">allLoops</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/r/base/table.html">as.table</a></span><span class="op">(</span><span class="op">)</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> |&gt;
-  <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'rows'</span>, <span class="st">'cols'</span>, <span class="st">'counts'</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## Visualize with ggplot2</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">long</span>,
-       mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rows</span>, y <span class="op">=</span> <span class="va">cols</span>, fill <span class="op">=</span> <span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'YlGnBu'</span>, direction <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>aspect.ratio<span class="op">=</span><span class="fl">1</span>, axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Convert matrix to long-format</span></span>
+<span><span class="va">long</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="va">loopApaWtHic</span><span class="op">$</span><span class="va">allLoops</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">as.table</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'rows'</span>, <span class="st">'cols'</span>, <span class="st">'counts'</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Visualize with ggplot2</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">long</span>,</span>
+<span>       mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rows</span>, y <span class="op">=</span> <span class="va">cols</span>, fill <span class="op">=</span> <span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'YlGnBu'</span>, direction <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>aspect.ratio<span class="op">=</span><span class="fl">1</span>, axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;"></p>
-<p>Notice that we can flip the matrix by using <code><a href="https://rdrr.io/r/base/rev.html">rev()</a></code> on either the rows or columns to change the orientation of the Hi-C diagonal:</p>
+<p>Notice that we can flip the matrix by using <code><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">rev()</a></code> on either the rows or columns to change the orientation of the Hi-C diagonal:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Flip the matrix</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">long</span>,
-       mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="va">rows</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">cols</span>, fill <span class="op">=</span> <span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'YlGnBu'</span>, direction <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>aspect.ratio<span class="op">=</span><span class="fl">1</span>, , axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Flip the matrix</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">long</span>,</span>
+<span>       mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">rows</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">cols</span>, fill <span class="op">=</span> <span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'YlGnBu'</span>, direction <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>aspect.ratio<span class="op">=</span><span class="fl">1</span>, , axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;"></p>
 <p>We can apply this to all matrices in our list and combine the datasets into a “tidy” data form for visualizing with <code>ggplot2</code>:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## Define function to convert a matrix to long format</span>
-<span class="va">toLong</span> <span class="op">&lt;-</span> \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span>
-  <span class="va">x</span> |&gt;
-    <span class="fu"><a href="https://rdrr.io/r/base/table.html">as.table</a></span><span class="op">(</span><span class="op">)</span> |&gt;
-    <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> |&gt;
-    <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">'rows'</span>, <span class="st">'cols'</span>, <span class="st">'counts'</span><span class="op">)</span><span class="op">)</span>
-<span class="op">}</span>
-
-<span class="co">## Apply function to convert all matrices to long format</span>
-<span class="va">apas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>WT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">toLong</span><span class="op">)</span>,
-             FS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">loopApaFsHic</span>, <span class="va">toLong</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## Add loopType to each data.frame and combine</span>
-<span class="va">apas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">apas</span>, \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/funprog.html">Map</a></span><span class="op">(</span><span class="va">cbind</span>, <span class="va">x</span>, loopType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## Add hicMap to each data.frame and combine</span>
-<span class="va">apas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/funprog.html">Map</a></span><span class="op">(</span><span class="va">cbind</span>, <span class="va">apas</span>, hicMap <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">apas</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## Reorder factors</span>
-<span class="va">apas</span><span class="op">$</span><span class="va">loopType</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">apas</span><span class="op">$</span><span class="va">loopType</span>,
-                        levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"allLoops"</span>, <span class="st">"wtLoops"</span>, <span class="st">"fsLoops"</span><span class="op">)</span><span class="op">)</span>
-<span class="va">apas</span><span class="op">$</span><span class="va">hicMap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">apas</span><span class="op">$</span><span class="va">hicMap</span>,
-                      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"WT"</span>, <span class="st">"FS"</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## Visualize with ggplot2</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">apas</span>,
-       mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rows</span>, y <span class="op">=</span> <span class="va">cols</span>, fill <span class="op">=</span> <span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'YlGnBu'</span>, direction <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html">facet_grid</a></span><span class="op">(</span><span class="va">hicMap</span><span class="op">~</span><span class="va">loopType</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>aspect.ratio<span class="op">=</span><span class="fl">1</span>, axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="co">## Define function to convert a matrix to long format</span></span>
+<span><span class="va">toLong</span> <span class="op">&lt;-</span> \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">x</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">as.table</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'rows'</span>, <span class="st">'cols'</span>, <span class="st">'counts'</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="co">## Apply function to convert all matrices to long format</span></span>
+<span><span class="va">apas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>WT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">toLong</span><span class="op">)</span>,</span>
+<span>             FS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">loopApaFsHic</span>, <span class="va">toLong</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Add loopType to each data.frame and combine</span></span>
+<span><span class="va">apas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">apas</span>, \<span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/funprog.html" class="external-link">Map</a></span><span class="op">(</span><span class="va">cbind</span>, <span class="va">x</span>, loopType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Add hicMap to each data.frame and combine</span></span>
+<span><span class="va">apas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/funprog.html" class="external-link">Map</a></span><span class="op">(</span><span class="va">cbind</span>, <span class="va">apas</span>, hicMap <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">apas</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Reorder factors</span></span>
+<span><span class="va">apas</span><span class="op">$</span><span class="va">loopType</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">apas</span><span class="op">$</span><span class="va">loopType</span>,</span>
+<span>                        levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"allLoops"</span>, <span class="st">"wtLoops"</span>, <span class="st">"fsLoops"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">apas</span><span class="op">$</span><span class="va">hicMap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">apas</span><span class="op">$</span><span class="va">hicMap</span>,</span>
+<span>                      levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"WT"</span>, <span class="st">"FS"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Visualize with ggplot2</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">apas</span>,</span>
+<span>       mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">rows</span>, y <span class="op">=</span> <span class="va">cols</span>, fill <span class="op">=</span> <span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_distiller</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">'YlGnBu'</span>, direction <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span><span class="va">hicMap</span><span class="op">~</span><span class="va">loopType</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>aspect.ratio<span class="op">=</span><span class="fl">1</span>, axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;"></p>
 </div>
-<div id="visualizing-with-plotgardener" class="section level3">
-<h3 class="hasAnchor">
-<a href="#visualizing-with-plotgardener" class="anchor"></a>Visualizing with <code>plotgardener</code>
+<div class="section level3">
+<h3 id="visualizing-with-plotgardener">Visualizing with <code>plotgardener</code><a class="anchor" aria-label="anchor" href="#visualizing-with-plotgardener"></a>
 </h3>
 <p><code>plotgardener</code> is a genomics plotting package that allows for more flexibility than <code>ggplot2</code>. As part of the <code>plotgardener</code> ecosystem, <code>hictoolsr</code> provides a <code><a href="../reference/plotApa.html">plotApa()</a></code> function that is compatible with other <code>plotgardener</code> functions. Additionally, <code><a href="../reference/plotApa.html">plotApa()</a></code> can works on matrices and doesn’t first require converting to long-format.</p>
 <p>Here is an example of quickly visualizing with <code><a href="../reference/plotApa.html">plotApa()</a></code> using a palette from <code>RColorBrewer</code>:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">RColorBrewer</span><span class="op">)</span>
-
-<span class="fu"><a href="../reference/plotApa.html">plotApa</a></span><span class="op">(</span>apa <span class="op">=</span> <span class="va">loopApaWtHic</span><span class="op">$</span><span class="va">allLoops</span>,
-        palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">'YlGnBu'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-<span class="co">#&gt; APA[APA1]</span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">RColorBrewer</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/plotApa.html">plotApa</a></span><span class="op">(</span>apa <span class="op">=</span> <span class="va">loopApaWtHic</span><span class="op">$</span><span class="va">allLoops</span>,</span>
+<span>        palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html" class="external-link">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">'YlGnBu'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; APA[APA1]</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;"></p>
 <p>By supplying positional information (e.g. <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code>, etc…) <code>plotgardener</code> will switch to multi-figure mode and allow multiple plot arrangements on a <code>pgPage</code>. Let’s visualize all APA results using functions from <code>hictoolsr</code> and <code>plotgardener</code>:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://phanstiellab.github.io/plotgardener">plotgardener</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://purrr.tidyverse.org">purrr</a></span><span class="op">)</span>
-
-<span class="co">## Initiate plotgardener page</span>
-<span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/pageCreate.html">pageCreate</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">4.25</span>, height <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>
-
-<span class="co">## Define shared parameters</span>
-<span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/pgParams.html">pgParams</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">0.5</span>,
-              y <span class="op">=</span> <span class="fl">0.5</span>,
-              width <span class="op">=</span> <span class="fl">1</span>,
-              height <span class="op">=</span> <span class="fl">1</span>,
-              space <span class="op">=</span> <span class="fl">0.075</span>,
-              zrange <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">loopApaFsHic</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,
-              palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">'YlGnBu'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## Define grid of coordinate positions</span>
-<span class="va">xpos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">x</span>, <span class="va">p</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>, <span class="va">p</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span>
-<span class="va">ypos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">y</span>, <span class="va">p</span><span class="op">$</span><span class="va">y</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">height</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>, <span class="va">p</span><span class="op">$</span><span class="va">y</span> <span class="op">+</span> <span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">height</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span>
-
-<span class="co">## Plot row of WT APAs</span>
-<span class="va">wt_plots</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map2.html">pmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">xpos</span>, <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, \<span class="op">(</span><span class="va">a</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span>
-    <span class="fu"><a href="../reference/plotApa.html">plotApa</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">p</span>, apa <span class="op">=</span> <span class="va">a</span>, x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span>
-  <span class="op">}</span><span class="op">)</span>
-
-<span class="co">## Plot row of FS APAs</span>
-<span class="va">fs_plots</span> <span class="op">&lt;-</span> 
-  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map2.html">pmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">loopApaFsHic</span>, <span class="va">xpos</span>, <span class="va">ypos</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span>, \<span class="op">(</span><span class="va">a</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span>
-    <span class="fu"><a href="../reference/plotApa.html">plotApa</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">p</span>, apa <span class="op">=</span> <span class="va">a</span>, x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span>
-  <span class="op">}</span><span class="op">)</span>
-
-<span class="co">## Add legend</span>
-<span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/annoHeatmapLegend.html">annoHeatmapLegend</a></span><span class="op">(</span>plot <span class="op">=</span> <span class="va">wt_plots</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,
-                  x <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span><span class="op">)</span><span class="op">*</span><span class="fl">3</span>,
-                  y <span class="op">=</span> <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,
-                  width <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>,
-                  height <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">height</span><span class="op">*</span><span class="fl">0.75</span>,
-                  fontcolor <span class="op">=</span> <span class="st">'black'</span><span class="op">)</span>
-
-<span class="co">## Add text labels</span>
-<span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/plotText.html">plotText</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="st">"All loops"</span>, <span class="st">"WT loops"</span>, <span class="st">"FS loops"</span><span class="op">)</span>,
-         x <span class="op">=</span> <span class="va">xpos</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">/</span> <span class="fl">2</span>,
-         y <span class="op">=</span> <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>,
-         just <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="st">'center'</span>, <span class="st">'bottom'</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/plotText.html">plotText</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="st">"WT"</span>, <span class="st">"FS"</span><span class="op">)</span>,
-         x <span class="op">=</span> <span class="va">xpos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>,
-         y <span class="op">=</span> <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">height</span> <span class="op">/</span> <span class="fl">2</span>,
-         rot <span class="op">=</span> <span class="fl">90</span>,
-         just <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html">c</a></span><span class="op">(</span><span class="st">'center'</span>, <span class="st">'bottom'</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://phanstiellab.github.io/plotgardener" class="external-link">plotgardener</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://purrr.tidyverse.org" class="external-link">purrr</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Initiate plotgardener page</span></span>
+<span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/pageCreate.html" class="external-link">pageCreate</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">4.25</span>, height <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Define shared parameters</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/pgParams.html" class="external-link">pgParams</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>              y <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>              width <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>              height <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>              space <span class="op">=</span> <span class="fl">0.075</span>,</span>
+<span>              zrange <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">loopApaFsHic</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>              palette <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html" class="external-link">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">'YlGnBu'</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Define grid of coordinate positions</span></span>
+<span><span class="va">xpos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">x</span>, <span class="va">p</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>, <span class="va">p</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">ypos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">y</span>, <span class="va">p</span><span class="op">$</span><span class="va">y</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">height</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>, <span class="va">p</span><span class="op">$</span><span class="va">y</span> <span class="op">+</span> <span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">height</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Plot row of WT APAs</span></span>
+<span><span class="va">wt_plots</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map2.html" class="external-link">pmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">loopApaWtHic</span>, <span class="va">xpos</span>, <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, \<span class="op">(</span><span class="va">a</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/plotApa.html">plotApa</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">p</span>, apa <span class="op">=</span> <span class="va">a</span>, x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Plot row of FS APAs</span></span>
+<span><span class="va">fs_plots</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://purrr.tidyverse.org/reference/map2.html" class="external-link">pmap</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">loopApaFsHic</span>, <span class="va">xpos</span>, <span class="va">ypos</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span>, \<span class="op">(</span><span class="va">a</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/plotApa.html">plotApa</a></span><span class="op">(</span>params <span class="op">=</span> <span class="va">p</span>, apa <span class="op">=</span> <span class="va">a</span>, x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Add legend</span></span>
+<span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/annoHeatmapLegend.html" class="external-link">annoHeatmapLegend</a></span><span class="op">(</span>plot <span class="op">=</span> <span class="va">wt_plots</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>                  x <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span><span class="op">)</span><span class="op">*</span><span class="fl">3</span>,</span>
+<span>                  y <span class="op">=</span> <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>                  width <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>,</span>
+<span>                  height <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">height</span><span class="op">*</span><span class="fl">0.75</span>,</span>
+<span>                  fontcolor <span class="op">=</span> <span class="st">'black'</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Add text labels</span></span>
+<span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/plotText.html" class="external-link">plotText</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"All loops"</span>, <span class="st">"WT loops"</span>, <span class="st">"FS loops"</span><span class="op">)</span>,</span>
+<span>         x <span class="op">=</span> <span class="va">xpos</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">width</span> <span class="op">/</span> <span class="fl">2</span>,</span>
+<span>         y <span class="op">=</span> <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>,</span>
+<span>         just <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'center'</span>, <span class="st">'bottom'</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/plotText.html" class="external-link">plotText</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"WT"</span>, <span class="st">"FS"</span><span class="op">)</span>,</span>
+<span>         x <span class="op">=</span> <span class="va">xpos</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">p</span><span class="op">$</span><span class="va">space</span>,</span>
+<span>         y <span class="op">=</span> <span class="va">ypos</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="va">p</span><span class="op">$</span><span class="va">height</span> <span class="op">/</span> <span class="fl">2</span>,</span>
+<span>         rot <span class="op">=</span> <span class="fl">90</span>,</span>
+<span>         just <span class="op">=</span> <span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'center'</span>, <span class="st">'bottom'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R">
-<span class="co">## Remove Guides</span>
-<span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/pageGuideHide.html">pageGuideHide</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span></span>
+<span><span class="co">## Remove Guides</span></span>
+<span><span class="fu"><a href="https://phanstiellab.github.io/plotgardener/reference/pageGuideHide.html" class="external-link">pageGuideHide</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="differential_loop_calling_files/figure-html/unnamed-chunk-19-2.png" style="display: block; margin: auto;"></p>
 <p>As you can see, in some ways <code>plotgardener</code> can be more verbose, but this comes with the added flexibility to specificy exactly <em>where</em> and <em>how</em> you would like to visualize your genomic data. Just remember, with freedom comes great responsibility!</p>
 </div>
 </div>
-<div id="session-information" class="section level2">
-<h2 class="hasAnchor">
-<a href="#session-information" class="anchor"></a>Session information</h2>
+<div class="section level2">
+<h2 id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
+</h2>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html">sessionInfo</a></span><span class="op">(</span><span class="op">)</span>
-<span class="co">#&gt; R version 4.1.1 (2021-08-10)</span>
-<span class="co">#&gt; Platform: x86_64-pc-linux-gnu (64-bit)</span>
-<span class="co">#&gt; Running under: Ubuntu 20.04.3 LTS</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; Matrix products: default</span>
-<span class="co">#&gt; BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.8.so</span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; locale:</span>
-<span class="co">#&gt;  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              </span>
-<span class="co">#&gt;  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    </span>
-<span class="co">#&gt;  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             </span>
-<span class="co">#&gt;  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 </span>
-<span class="co">#&gt;  [9] LC_ADDRESS=C               LC_TELEPHONE=C            </span>
-<span class="co">#&gt; [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; attached base packages:</span>
-<span class="co">#&gt; [1] parallel  stats4    stats     graphics  grDevices utils     datasets </span>
-<span class="co">#&gt; [8] methods   base     </span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; other attached packages:</span>
-<span class="co">#&gt;  [1] purrr_0.3.4                 plotgardener_0.99.16       </span>
-<span class="co">#&gt;  [3] RColorBrewer_1.1-2          ggplot2_3.3.5              </span>
-<span class="co">#&gt;  [5] DESeq2_1.32.0               InteractionSet_1.20.0      </span>
-<span class="co">#&gt;  [7] SummarizedExperiment_1.22.0 Biobase_2.52.0             </span>
-<span class="co">#&gt;  [9] MatrixGenerics_1.4.3        matrixStats_0.61.0         </span>
-<span class="co">#&gt; [11] GenomicRanges_1.44.0        GenomeInfoDb_1.28.4        </span>
-<span class="co">#&gt; [13] IRanges_2.26.0              S4Vectors_0.30.2           </span>
-<span class="co">#&gt; [15] BiocGenerics_0.38.0         dbscan_1.1-8               </span>
-<span class="co">#&gt; [17] hictoolsr_0.1.0            </span>
-<span class="co">#&gt; </span>
-<span class="co">#&gt; loaded via a namespace (and not attached):</span>
-<span class="co">#&gt;  [1] colorspace_2.0-2         rjson_0.2.20             ellipsis_0.3.2          </span>
-<span class="co">#&gt;  [4] rprojroot_2.0.2          XVector_0.32.0           fs_1.5.0                </span>
-<span class="co">#&gt;  [7] farver_2.1.0             bit64_4.0.5              AnnotationDbi_1.54.1    </span>
-<span class="co">#&gt; [10] fansi_0.5.0              mvtnorm_1.1-3            apeglm_1.14.0           </span>
-<span class="co">#&gt; [13] splines_4.1.1            cachem_1.0.6             geneplotter_1.70.0      </span>
-<span class="co">#&gt; [16] knitr_1.36               Rsamtools_2.8.0          annotate_1.70.0         </span>
-<span class="co">#&gt; [19] png_0.1-7                compiler_4.1.1           httr_1.4.2              </span>
-<span class="co">#&gt; [22] assertthat_0.2.1         Matrix_1.3-4             fastmap_1.1.0           </span>
-<span class="co">#&gt; [25] htmltools_0.5.2          tools_4.1.1              coda_0.19-4             </span>
-<span class="co">#&gt; [28] gtable_0.3.0             glue_1.4.2               GenomeInfoDbData_1.2.6  </span>
-<span class="co">#&gt; [31] reshape2_1.4.4           dplyr_1.0.7              Rcpp_1.0.7              </span>
-<span class="co">#&gt; [34] bbmle_1.0.24             pkgdown_1.6.1            vctrs_0.3.8             </span>
-<span class="co">#&gt; [37] Biostrings_2.60.2        strawr_0.0.9             rtracklayer_1.52.1      </span>
-<span class="co">#&gt; [40] xfun_0.27                stringr_1.4.0            plyranges_1.12.1        </span>
-<span class="co">#&gt; [43] lifecycle_1.0.1          restfulr_0.0.13          XML_3.99-0.8            </span>
-<span class="co">#&gt; [46] zlibbioc_1.38.0          MASS_7.3-54              scales_1.1.1            </span>
-<span class="co">#&gt; [49] ragg_1.1.3               yaml_2.2.1               curl_4.3.2              </span>
-<span class="co">#&gt; [52] memoise_2.0.0            emdbook_1.3.12           yulab.utils_0.0.4       </span>
-<span class="co">#&gt; [55] bdsmatrix_1.3-4          stringi_1.7.5            RSQLite_2.2.8           </span>
-<span class="co">#&gt; [58] highr_0.9                genefilter_1.74.1        BiocIO_1.2.0            </span>
-<span class="co">#&gt; [61] desc_1.4.0               BiocParallel_1.26.2      rlang_0.4.12            </span>
-<span class="co">#&gt; [64] pkgconfig_2.0.3          systemfonts_1.0.3        bitops_1.0-7            </span>
-<span class="co">#&gt; [67] evaluate_0.14            lattice_0.20-45          GenomicAlignments_1.28.0</span>
-<span class="co">#&gt; [70] labeling_0.4.2           bit_4.0.4                tidyselect_1.1.1        </span>
-<span class="co">#&gt; [73] plyr_1.8.6               magrittr_2.0.1           R6_2.5.1                </span>
-<span class="co">#&gt; [76] generics_0.1.0           DelayedArray_0.18.0      DBI_1.1.1               </span>
-<span class="co">#&gt; [79] withr_2.4.2              pillar_1.6.4             survival_3.2-13         </span>
-<span class="co">#&gt; [82] KEGGREST_1.32.0          RCurl_1.98-1.5           tibble_3.1.5            </span>
-<span class="co">#&gt; [85] crayon_1.4.1             utf8_1.2.2               rmarkdown_2.11          </span>
-<span class="co">#&gt; [88] locfit_1.5-9.4           grid_4.1.1               data.table_1.14.2       </span>
-<span class="co">#&gt; [91] blob_1.2.2               digest_0.6.28            xtable_1.8-4            </span>
-<span class="co">#&gt; [94] tidyr_1.1.4              numDeriv_2016.8-1.1      gridGraphics_0.5-1      </span>
-<span class="co">#&gt; [97] textshaping_0.3.6        munsell_0.5.0            ggplotify_0.1.0</span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.1.1 (2021-08-10)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 20.04.3 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.8.so</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              </span></span>
+<span><span class="co">#&gt;  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    </span></span>
+<span><span class="co">#&gt;  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 </span></span>
+<span><span class="co">#&gt;  [9] LC_ADDRESS=C               LC_TELEPHONE=C            </span></span>
+<span><span class="co">#&gt; [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] parallel  stats4    stats     graphics  grDevices utils     datasets </span></span>
+<span><span class="co">#&gt; [8] methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt;  [1] purrr_0.3.4                 plotgardener_1.2.9         </span></span>
+<span><span class="co">#&gt;  [3] RColorBrewer_1.1-3          ggplot2_3.3.6              </span></span>
+<span><span class="co">#&gt;  [5] DESeq2_1.32.0               InteractionSet_1.20.0      </span></span>
+<span><span class="co">#&gt;  [7] SummarizedExperiment_1.22.0 Biobase_2.52.0             </span></span>
+<span><span class="co">#&gt;  [9] MatrixGenerics_1.4.3        matrixStats_0.62.0         </span></span>
+<span><span class="co">#&gt; [11] GenomicRanges_1.44.0        GenomeInfoDb_1.28.4        </span></span>
+<span><span class="co">#&gt; [13] IRanges_2.26.0              S4Vectors_0.30.2           </span></span>
+<span><span class="co">#&gt; [15] BiocGenerics_0.38.0         dbscan_1.1-10              </span></span>
+<span><span class="co">#&gt; [17] hictoolsr_1.0.0            </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;   [1] colorspace_2.0-3         rjson_0.2.21             rprojroot_2.0.3         </span></span>
+<span><span class="co">#&gt;   [4] XVector_0.32.0           fs_1.5.2                 farver_2.1.1            </span></span>
+<span><span class="co">#&gt;   [7] bit64_4.0.5              mvtnorm_1.1-3            AnnotationDbi_1.54.1    </span></span>
+<span><span class="co">#&gt;  [10] fansi_1.0.3              apeglm_1.14.0            splines_4.1.1           </span></span>
+<span><span class="co">#&gt;  [13] cachem_1.0.6             geneplotter_1.70.0       knitr_1.39              </span></span>
+<span><span class="co">#&gt;  [16] jsonlite_1.8.0           Rsamtools_2.8.0          annotate_1.70.0         </span></span>
+<span><span class="co">#&gt;  [19] png_0.1-7                compiler_4.1.1           httr_1.4.3              </span></span>
+<span><span class="co">#&gt;  [22] assertthat_0.2.1         Matrix_1.4-1             fastmap_1.1.0           </span></span>
+<span><span class="co">#&gt;  [25] cli_3.3.0                htmltools_0.5.3          tools_4.1.1             </span></span>
+<span><span class="co">#&gt;  [28] coda_0.19-4              gtable_0.3.0             glue_1.6.2              </span></span>
+<span><span class="co">#&gt;  [31] GenomeInfoDbData_1.2.6   reshape2_1.4.4           dplyr_1.0.9             </span></span>
+<span><span class="co">#&gt;  [34] Rcpp_1.0.9               bbmle_1.0.25             jquerylib_0.1.4         </span></span>
+<span><span class="co">#&gt;  [37] pkgdown_2.0.6            vctrs_0.4.1              Biostrings_2.60.2       </span></span>
+<span><span class="co">#&gt;  [40] strawr_0.0.9             rtracklayer_1.52.1       xfun_0.31               </span></span>
+<span><span class="co">#&gt;  [43] stringr_1.4.0            plyranges_1.12.1         lifecycle_1.0.1         </span></span>
+<span><span class="co">#&gt;  [46] restfulr_0.0.15          XML_3.99-0.10            zlibbioc_1.38.0         </span></span>
+<span><span class="co">#&gt;  [49] MASS_7.3-58              scales_1.2.0             ragg_1.2.2              </span></span>
+<span><span class="co">#&gt;  [52] yaml_2.3.5               curl_4.3.2               memoise_2.0.1           </span></span>
+<span><span class="co">#&gt;  [55] emdbook_1.3.12           yulab.utils_0.0.5        sass_0.4.2              </span></span>
+<span><span class="co">#&gt;  [58] bdsmatrix_1.3-6          stringi_1.7.8            RSQLite_2.2.15          </span></span>
+<span><span class="co">#&gt;  [61] highr_0.9                genefilter_1.74.1        BiocIO_1.2.0            </span></span>
+<span><span class="co">#&gt;  [64] desc_1.4.1               BiocParallel_1.26.2      rlang_1.0.4             </span></span>
+<span><span class="co">#&gt;  [67] pkgconfig_2.0.3          systemfonts_1.0.4        bitops_1.0-7            </span></span>
+<span><span class="co">#&gt;  [70] evaluate_0.15            lattice_0.20-45          labeling_0.4.2          </span></span>
+<span><span class="co">#&gt;  [73] GenomicAlignments_1.28.0 bit_4.0.4                tidyselect_1.1.2        </span></span>
+<span><span class="co">#&gt;  [76] plyr_1.8.7               magrittr_2.0.3           R6_2.5.1                </span></span>
+<span><span class="co">#&gt;  [79] generics_0.1.3           DelayedArray_0.18.0      DBI_1.1.3               </span></span>
+<span><span class="co">#&gt;  [82] withr_2.5.0              pillar_1.8.0             survival_3.3-1          </span></span>
+<span><span class="co">#&gt;  [85] KEGGREST_1.32.0          RCurl_1.98-1.8           tibble_3.1.8            </span></span>
+<span><span class="co">#&gt;  [88] crayon_1.5.1             utf8_1.2.2               rmarkdown_2.14          </span></span>
+<span><span class="co">#&gt;  [91] locfit_1.5-9.6           grid_4.1.1               data.table_1.14.2       </span></span>
+<span><span class="co">#&gt;  [94] blob_1.2.3               digest_0.6.29            xtable_1.8-4            </span></span>
+<span><span class="co">#&gt;  [97] tidyr_1.2.0              numDeriv_2016.8-1.1      gridGraphics_0.5-1      </span></span>
+<span><span class="co">#&gt; [100] textshaping_0.3.6        munsell_0.5.0            ggplotify_0.1.0         </span></span>
+<span><span class="co">#&gt; [103] bslib_0.4.0</span></span></code></pre></div>
 </div>
   </div>
 
@@ -681,11 +682,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by <a href="https://ericscottdavis.com">Eric Davis</a>.</p>
+  <p></p>
+<p>Developed by <a href="https://ericscottdavis.com" class="external-link">Eric Davis</a>.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>
@@ -693,6 +696,8 @@
 
   
 
+
+  
 
   </body>
 </html>
