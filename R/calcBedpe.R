@@ -28,7 +28,7 @@ calcBedpe <- function(bed, res = 10000, x = 100, decreasing = TRUE,
                      "pValue", "qValue", "peak")
 
   ## Take the top x strongest or weakest peaks
-  bed <- bed[order(bed$signalValue, decreasing = decreasing)][1:x,]
+  bed <- bed[order(bed$signalValue, decreasing = decreasing),][1:x,]
 
   ## Bin the bed file based on the resolution
   binned <- data.table(

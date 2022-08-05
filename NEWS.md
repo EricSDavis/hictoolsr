@@ -1,3 +1,8 @@
+# hictoolsr 1.0.2
+
+* Allow `calcBedpe()` to accept `data.frame` as input in addition
+to `data.table`
+
 # hictoolsr 1.0.1
 
 * Fixed bug that prevented `.hic` files with "chr"-prefixed
