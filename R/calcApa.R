@@ -12,7 +12,7 @@
 #'
 #' @export
 #'
-calcApa <- function(bedpe, hic, norm = 'NONE', res = 10000, buffer = 5, filter = FALSE) {
+calcApa <- function(bedpe, hic, norm = 'NONE', res = 10000, buffer = 5, filter = FALSE, out = 'observed') {
 
   ## Set scipen to 999 for straw extraction
   oo <- options()
@@ -137,7 +137,7 @@ calcApa <- function(bedpe, hic, norm = 'NONE', res = 10000, buffer = 5, filter =
                                              chr2loc = locs$chr2loc[i],
                                              unit = "BP",
                                              binsize = res,
-                                             matrix = "observed"))
+                                             matrix = out))
 
     ## Update progress
     pb$tick(tokens=list(step=sprintf('Matching chr%s-chr%s',
