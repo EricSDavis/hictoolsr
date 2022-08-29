@@ -1,3 +1,7 @@
+# hictoolsr 1.1.2
+
+* Modified 'calcApa()' with matrix argument which outputs observed(default)/oe/expected matrix from strawr.
+
 # hictoolsr 1.0.2
 
 * Allow `calcBedpe()` to accept `data.frame` as input in addition
