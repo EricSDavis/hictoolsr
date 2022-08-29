@@ -4,7 +4,15 @@
 \alias{calcApa}
 \title{Extract BEDPE interactions from a Hi-C matrix}
 \usage{
-calcApa(bedpe, hic, norm = "NONE", res = 10000, buffer = 5, filter = FALSE)
+calcApa(
+  bedpe,
+  hic,
+  norm = "NONE",
+  res = 10000,
+  buffer = 5,
+  filter = FALSE,
+  matrix = "observed"
+)
 }
 \arguments{
 \item{bedpe}{data.frame or data.table in BEDPE format.}
@@ -18,9 +26,11 @@ calcApa(bedpe, hic, norm = "NONE", res = 10000, buffer = 5, filter = FALSE)
 \item{buffer}{integer number of res-length bins from the center pixel.}
 
 \item{filter}{TRUE or FALSE (default). If TRUE, \code{filterBedpe()} will be used to remove short intrachromosomal interactions that would otherwise cross the diagonal.}
+
+\item{matrix}{Type of matrix to output. Can be one of observed/oe/expected. observed is observed counts, oe is observed/expected counts, expected is expected counts.}
 }
 \value{
-Returns a list APA matricies that can be compiled and plotted.
+Returts a list APA matricies that can be compiled and plotted.
 }
 \description{
 Extract BEDPE interactions from a Hi-C matrix

@@ -6,8 +6,9 @@
 \alias{hictoolsr-package}
 \title{hictoolsr: a set of tools for Hi-C data analysis}
 \description{
-hictoolsr is an R package that contains a collection of useful tools for Hi-C
-    data analysis.
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+hictoolsr is an R package that contains a collection of useful tools for Hi-C data analysis.
 }
 \author{
 \strong{Maintainer}: Eric Davis \email{esdavis@live.unc.edu}

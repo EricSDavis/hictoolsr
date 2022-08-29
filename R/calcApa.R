@@ -6,8 +6,9 @@
 #' @param res integer resolution of bedpe bins.
 #' @param buffer integer number of res-length bins from the center pixel.
 #' @param filter TRUE or FALSE (default). If TRUE, \code{filterBedpe()} will be used to remove short intrachromosomal interactions that would otherwise cross the diagonal.
-#'
-#' @return Returns a list APA matricies that can be compiled and plotted.
+#' @param matrix Type of matrix to output. Can be one of observed/oe/expected. observed is observed counts, oe is observed/expected counts, expected is expected counts.
+#' 
+#' @return Returts a list APA matricies that can be compiled and plotted.
 #'
 #'
 #' @export
@@ -20,6 +21,9 @@ calcApa <- function(bedpe, hic, norm = 'NONE', res = 10000, buffer = 5, filter =
   on.exit(options(oo))
 
   ## Input checking and processing -------------------------------------------------------
+  
+  ## Check matrix argument
+  matrix <- match.arg(arg=matrix, choices=c("observed","expected","oe"))
 
   ## Convert to GInteractions object
   if ("GInteractions" != class(bedpe)) {
